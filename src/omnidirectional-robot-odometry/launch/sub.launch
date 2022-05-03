@@ -1,5 +1,20 @@
 <launch>
 
+    <!-- bag 1 initial pose -->
+    <param name="init_pose_x" value="0.00815962441265583"/>
+    <param name="init_pose_y" value="0.0030597213190048933"/>
+    <param name="init_pose_th" value="-0.019595127552747726"/>
+
+    <!-- bag 2 initial pose -->
+    <!-- <param name="init_pose_x" value="0.024221817031502724"/>
+    <param name="init_pose_y" value="0.003742524655535817"/>
+    <param name="init_pose_th" value="-0.0028051661793142557"/> -->
+
+    <!-- bag 3 initial pose -->
+    <!-- <param name="init_pose_x" value="0.005460123997181654"/>
+    <param name="init_pose_y" value="0.03997037187218666"/>
+    <param name="init_pose_th" value="-0.006751589477062225"/> -->
+
     <node pkg="omnidirectional-robot-odometry" type="sub" name="listener" output="screen"/>
 
 </launch>

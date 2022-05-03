@@ -4,6 +4,11 @@ KinematicsToOdometry::KinematicsToOdometry()
 {
   this->sub = this->nh.subscribe("wheel_states", 1000, &KinematicsToOdometry::compute_velocities, this);
   this->pub_velocities = this->nh.advertise<geometry_msgs::TwistStamped>("cmd_vel", 1000);
+  this->pub_odometry = this->nh.advertise<nav_msgs::Odometry>("odom", 1000);
+
+  this->nh.getParam("/init_pose_x", this->init_pose_x);
+  this->nh.getParam("/init_pose_y", this->init_pose_y);
+  this->nh.getParam("/init_pose_th", this->init_pose_th);
 }
 
 void KinematicsToOdometry::compute_velocities(const sensor_msgs::JointState::ConstPtr& msg) {
@@ -12,6 +17,12 @@ void KinematicsToOdometry::compute_velocities(const sensor_msgs::JointState::Con
   this->stamp_ns[1] = msg->header.stamp.nsec;
 
   if (this->stamp_ns[0] == -1) {
+    // Initialize the poses to the initial pose got in the parameter values.
+    // TODO -> It can be done dynamically by getting the first values of the bag from `msg`. I did not do it because the assignment of the project required so.
+    this->current_pose.x = this->init_pose_x;
+    this->current_pose.y = this->init_pose_y;
+    this->current_pose.th = this->init_pose_th;
+
     return;
   }
 
@@ -48,6 +59,31 @@ void KinematicsToOdometry::compute_velocities(const sensor_msgs::JointState::Con
   pub_msg.twist.angular.z = om_z;
 
   this->pub_velocities.publish(pub_msg);
+  
+  this->compute_euler_odometry(vel_x, vel_y, om_z);
+
+  // nav_msgs::Odometry odom_msg;
+  // this->pub_odometry.publish(this->current_pose);
+}
+
+pose KinematicsToOdometry::compute_euler_odometry(double vel_x, double vel_y, double vel_th){
+  pose previous_pose;
+
+  previous_pose.x = this->current_pose.x;
+  previous_pose.y = this->current_pose.y;
+  previous_pose.th = this->current_pose.th;
+
+  double dt = (this->stamp_ns[1] - this->stamp_ns[0]*pow(10, -9)); // The pow is to convert it in seconds.
+
+  this->current_pose.x = previous_pose.x + dt*vel_x;
+  this->current_pose.y = previous_pose.y + dt*vel_x;
+  this->current_pose.th = previous_pose.th + dt*vel_th;
+
+  return previous_pose;
+}
+
+pose KinematicsToOdometry::compute_rungekutta_odometry(double vel_x, double vel_y, double vel_th){
+  return this->current_pose;
 }
 
 void KinematicsToOdometry::main_loop()
