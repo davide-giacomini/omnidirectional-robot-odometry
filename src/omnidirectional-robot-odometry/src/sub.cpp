@@ -3,6 +3,7 @@
 KinematicsToOdometry::KinematicsToOdometry()
 {
   this->sub = this->nh.subscribe("wheel_states", 1000, &KinematicsToOdometry::compute_velocities, this);
+  this->pub_velocities = this->nh.advertise<geometry_msgs::TwistStamped>("cmd_vel", 1000);
 }
 
 void KinematicsToOdometry::compute_velocities(const sensor_msgs::JointState::ConstPtr& msg) {
@@ -31,16 +32,22 @@ void KinematicsToOdometry::compute_velocities(const sensor_msgs::JointState::Con
     ang_vel_wheels2[wheel] = msg->velocity[wheel]/60/this->T;
   }
 
-  std::cout << ang_vel_wheels1[0] << std::endl;
-  std::cout << ang_vel_wheels2[0] << std::endl;
-  std::cout << ang_vel_wheels1[1] << std::endl;
-  std::cout << ang_vel_wheels2[1] << std::endl;
-  std::cout << ang_vel_wheels1[2] << std::endl;
-  std::cout << ang_vel_wheels2[2] << std::endl;
-  std::cout << ang_vel_wheels1[3] << std::endl;
-  std::cout << ang_vel_wheels2[3] << std::endl;
-  std::cout << *msg << std::endl;
-  // ROS_INFO("I heard: [%lf]", msg->pose.position.x);
+  double vel_x = (this->r/4) * (ang_vel_wheels1[Wheel::FL] + ang_vel_wheels1[Wheel::FR] + ang_vel_wheels1[Wheel::RL]+ ang_vel_wheels1[Wheel::RR]);
+  double vel_y = (this->r/4) * ( - ang_vel_wheels1[Wheel::FL] + ang_vel_wheels1[Wheel::FR] + ang_vel_wheels1[Wheel::RL] - ang_vel_wheels1[Wheel::RR]);
+  double om_z = (this->r/(4*(this->l + this->w))) * ( - ang_vel_wheels1[Wheel::FL] + ang_vel_wheels1[Wheel::FR] - ang_vel_wheels1[Wheel::RL]+ ang_vel_wheels1[Wheel::RR]);
+
+  geometry_msgs::TwistStamped pub_msg;
+
+  pub_msg.header.stamp = msg->header.stamp;
+  pub_msg.header.frame_id = msg->header.frame_id;
+  pub_msg.twist.linear.x = vel_x;
+  pub_msg.twist.linear.y = vel_y;
+  pub_msg.twist.linear.z = 0;
+  pub_msg.twist.angular.x = 0;
+  pub_msg.twist.angular.y = 0;
+  pub_msg.twist.angular.z = om_z;
+
+  this->pub_velocities.publish(pub_msg);
 }
 
 void KinematicsToOdometry::main_loop()
