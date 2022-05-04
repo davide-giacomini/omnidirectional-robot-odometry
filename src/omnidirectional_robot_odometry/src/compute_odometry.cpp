@@ -1,5 +1,8 @@
 #include "omnidirectional_robot_odometry/compute_odometry.h"
 
+// TODO: I don't know why the method doesn't work inside the class with dynamic reconfigure
+void choose_integration_method(int *integration_method, omnidirectional_robot_odometry::parametersConfig &config, uint32_t level);
+
 ComputeOdometry::ComputeOdometry() {
     this->sub_cmd_vel = this->nh.subscribe("cmd_vel", 1000, &ComputeOdometry::compute_odometry, this);
     this->pub_odometry = this->nh.advertise<nav_msgs::Odometry>("odom", 1000);
@@ -8,6 +11,13 @@ ComputeOdometry::ComputeOdometry() {
     this->nh.getParam("/init_pose_th", this->init_pose_th);
 
     this->res_odom_service = this->nh.advertiseService("reset_odom", &ComputeOdometry::reset_odometry, this);
+
+    //TODO -> this doesn't work
+    // this->dynCallback = boost::bind(&ComputeOdometry::choose_integration_method, &this->integration_method, _1, _2);
+    // this->dynServer.setCallback(this->dynCallback);
+
+    this->dynCallback = boost::bind(&choose_integration_method, &this->integration_method, _1, _2);
+    this->dynServer.setCallback(this->dynCallback);
 }
 
 void ComputeOdometry::compute_odometry(const geometry_msgs::TwistStamped::ConstPtr& msg) {
@@ -117,6 +127,10 @@ bool ComputeOdometry::reset_odometry(omnidirectional_robot_odometry::ResetOdomet
     this->current_pose.th = req.new_th;
 
     return true;
+}
+
+void /*ComputeOdometry::*/choose_integration_method(int *integration_method, omnidirectional_robot_odometry::parametersConfig &config, uint32_t level) {
+    *integration_method = config.integration_method;
 }
 
 int main(int argc, char **argv) {
