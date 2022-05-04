@@ -12,6 +12,8 @@ void ComputeControl::sub_callback(const geometry_msgs::TwistStamped::ConstPtr& m
 
     omnidirectional_robot_odometry::CustomRpm cust_msg;
 
+    cust_msg.header.stamp = msg->header.stamp;
+    cust_msg.header.frame_id = msg->header.frame_id;
     cust_msg.rpm_fl = my_wheels_speed.rpm_fl;
     cust_msg.rpm_fr = my_wheels_speed.rpm_fr;
     cust_msg.rpm_rl = my_wheels_speed.rpm_rl;
