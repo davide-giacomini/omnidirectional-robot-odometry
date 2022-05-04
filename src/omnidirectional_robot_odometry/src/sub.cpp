@@ -1,4 +1,4 @@
-#include <omnidirectional-robot-odometry/sub.h>
+#include <omnidirectional_robot_odometry/sub.h>
 
 KinematicsToOdometry::KinematicsToOdometry()
 {

@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>omnidirectional-robot-odometry</name>
+  <name>omnidirectional_robot_odometry</name>
   <version>0.0.0</version>
   <description>Project 1 Robotics class</description>
 
