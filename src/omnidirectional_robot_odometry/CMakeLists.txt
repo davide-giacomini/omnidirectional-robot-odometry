@@ -11,5 +11,8 @@ catkin_package()
 
 include_directories(include ${catkin_INCLUDE_DIRS})
 
+add_executable(compute_wheel_speed src/compute_wheel_speed.cpp)
+target_link_libraries(compute_wheel_speed ${catkin_LIBRARIES})
+
 add_executable(sub src/sub.cpp)
 target_link_libraries(sub ${catkin_LIBRARIES})
