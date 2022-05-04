@@ -15,7 +15,7 @@
     <param name="init_pose_y" value="0.03997037187218666"/>
     <param name="init_pose_th" value="-0.006751589477062225"/> -->
 
-    <node pkg="ominidirectional_robot_odometry" type="sub" name="listener"/>
-    <node pkg="ominidirectional_robot_odometry" type="compute_wheel_speed" name="compute_wheel_speed"/>
+    <node pkg="omnidirectional_robot_odometry" type="sub" name="listener"/>
+    <node pkg="omnidirectional_robot_odometry" type="compute_wheel_speed" name="compute_wheel_speed"/>
 
 </launch>
