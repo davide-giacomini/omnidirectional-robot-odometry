@@ -122,9 +122,9 @@ add_executable(compute_wheel_speed src/compute_wheel_speed.cpp)
 add_dependencies(compute_wheel_speed ${catkin_EXPORTED_TARGETS})
 target_link_libraries(compute_wheel_speed ${catkin_LIBRARIES})
 
-add_executable(sub src/sub.cpp)
-add_dependencies(sub ${catkin_EXPORTED_TARGETS})
-target_link_libraries(sub ${catkin_LIBRARIES})
+add_executable(compute_velocities src/compute_velocities.cpp)
+add_dependencies(compute_velocities ${catkin_EXPORTED_TARGETS})
+target_link_libraries(compute_velocities ${catkin_LIBRARIES})
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}

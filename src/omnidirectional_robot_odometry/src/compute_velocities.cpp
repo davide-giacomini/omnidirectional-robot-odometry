@@ -1,4 +1,4 @@
-#include <omnidirectional_robot_odometry/sub.h>
+#include <omnidirectional_robot_odometry/compute_velocities.h>
 
 KinematicsToOdometry::KinematicsToOdometry()
 {
@@ -141,7 +141,7 @@ void KinematicsToOdometry::main_loop()
 }
 
 int main(int argc, char **argv) {
-  ros::init(argc, argv, "listener");
+  ros::init(argc, argv, "compute_velocities");
 
   KinematicsToOdometry my_subscriber;
   my_subscriber.main_loop();
