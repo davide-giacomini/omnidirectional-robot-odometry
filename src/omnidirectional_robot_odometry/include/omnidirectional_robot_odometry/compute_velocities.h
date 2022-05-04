@@ -2,16 +2,13 @@
 #include "std_msgs/String.h"
 #include "sensor_msgs/JointState.h"
 #include "geometry_msgs/TwistStamped.h"
-#include "nav_msgs/Odometry.h"
-#include <tf2/LinearMath/Quaternion.h>
-#include <tf2_ros/transform_broadcaster.h>
-#include <geometry_msgs/TransformStamped.h>
+#include "util.h"
 
 enum Wheel {
-    FL = (int) 0,
-    FR = (int) 1,
-    RL = (int) 2,
-    RR = (int) 3
+    FL = 0,
+    FR = 1,
+    RL = 2,
+    RR = 3
 };
 
 struct pose {
@@ -20,34 +17,16 @@ struct pose {
     double th;
 };
 
-class KinematicsToOdometry {
+class ComputeVelocities {
 public:
-    KinematicsToOdometry();
-    void main_loop();
-    void compute_velocities(const sensor_msgs::JointState::ConstPtr& msg);
+    ComputeVelocities();
 private:
-    static const int N = 42;// Encoders resolution
-    static const int T = 5; // 5:1 is the gear ratio
-    static constexpr double r = 0.07; // radius metres
-    static constexpr double l = 0.2; // Wheel position along x
-    static constexpr double w = 0.169; // Wheel position along y
-
     ros::NodeHandle nh;
-    ros::Subscriber sub;
+    ros::Subscriber sub_wheel_vel;
     ros::Publisher pub_velocities;
-    ros::Publisher pub_odometry;
-    tf2_ros::TransformBroadcaster br;
-    geometry_msgs::TransformStamped transformStamped;
-
 
     double ticks_wheels[4][2];
     double stamp_ns[2] = { -1, -1 };
-    double init_pose_x;
-    double init_pose_y;
-    double init_pose_th;
-    pose current_pose;
 
-    pose compute_euler_odometry(double vel_x, double vel_y, double vel_th);
-    pose compute_rungekutta_odometry(double vel_x, double vel_y, double vel_th);
-    void pub_transform(const nav_msgs::Odometry msg);
+    void compute_velocities(const sensor_msgs::JointState::ConstPtr& msg);
 };
