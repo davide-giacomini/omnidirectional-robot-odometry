@@ -45,7 +45,7 @@ void KinematicsToOdometry::compute_velocities(const sensor_msgs::JointState::Con
 
   double vel_x = (this->r/4) * (ang_vel_wheels1[Wheel::FL] + ang_vel_wheels1[Wheel::FR] + ang_vel_wheels1[Wheel::RL]+ ang_vel_wheels1[Wheel::RR]);
   double vel_y = (this->r/4) * ( - ang_vel_wheels1[Wheel::FL] + ang_vel_wheels1[Wheel::FR] + ang_vel_wheels1[Wheel::RL] - ang_vel_wheels1[Wheel::RR]);
-  double om_z = (this->r/(4*(this->l + this->w))) * ( - ang_vel_wheels1[Wheel::FL] + ang_vel_wheels1[Wheel::FR] - ang_vel_wheels1[Wheel::RL]+ ang_vel_wheels1[Wheel::RR]);
+  double vel_th = (this->r/(4*(this->l + this->w))) * ( - ang_vel_wheels1[Wheel::FL] + ang_vel_wheels1[Wheel::FR] - ang_vel_wheels1[Wheel::RL]+ ang_vel_wheels1[Wheel::RR]);
 
   geometry_msgs::TwistStamped pub_msg;
 
@@ -56,15 +56,64 @@ void KinematicsToOdometry::compute_velocities(const sensor_msgs::JointState::Con
   pub_msg.twist.linear.z = 0;
   pub_msg.twist.angular.x = 0;
   pub_msg.twist.angular.y = 0;
-  pub_msg.twist.angular.z = om_z;
+  pub_msg.twist.angular.z = vel_th;
 
   this->pub_velocities.publish(pub_msg);
   
-  this->compute_euler_odometry(vel_x, vel_y, om_z);
+  this->compute_euler_odometry(vel_x, vel_y, vel_th);
 
-  // nav_msgs::Odometry odom_msg;
-  // this->pub_odometry.publish(this->current_pose);
+  nav_msgs::Odometry odom_msg;
+
+  // set header
+  odom_msg.header.stamp = msg->header.stamp;
+  odom_msg.header.frame_id = "odom";
+  odom_msg.child_frame_id = "base_link";
+  // set position
+  odom_msg.pose.pose.position.x = this->current_pose.x;
+  odom_msg.pose.pose.position.y = this->current_pose.y;
+  odom_msg.pose.pose.position.z = 0;
+  // set theta
+  tf2::Quaternion q;
+  q.setRPY(0, 0, this->current_pose.th);
+  odom_msg.pose.pose.orientation.x = q.x();
+  odom_msg.pose.pose.orientation.y = q.y();
+  odom_msg.pose.pose.orientation.z = q.z();
+  odom_msg.pose.pose.orientation.w = q.w();
+  // set covariance
+  odom_msg.pose.covariance.fill(0);
+  // set twist
+  odom_msg.twist.twist.linear.x = vel_x;
+  odom_msg.twist.twist.linear.y = vel_y;
+  odom_msg.twist.twist.linear.z = 0;
+  odom_msg.twist.twist.angular.x = 0;
+  odom_msg.twist.twist.angular.y = 0;
+  odom_msg.twist.twist.angular.z = vel_th;
+  // set covariance
+  odom_msg.twist.covariance.fill(0);
+
+  this->pub_odometry.publish(odom_msg);
+  this->pub_transform(odom_msg);
 }
+
+void KinematicsToOdometry::pub_transform(const nav_msgs::Odometry msg){
+    // set header
+    this->transformStamped.header.stamp = ros::Time::now();
+    this->transformStamped.header.frame_id = msg.header.frame_id;
+    this->transformStamped.child_frame_id = msg.child_frame_id;
+    // set x,y
+    this->transformStamped.transform.translation.x = msg.pose.pose.orientation.x;
+    this->transformStamped.transform.translation.y = msg.pose.pose.orientation.y;
+    this->transformStamped.transform.translation.z = msg.pose.pose.orientation.z;
+    // set theta
+    tf2::Quaternion q;
+    q.setRPY(0, 0, msg.twist.twist.angular.z);
+    this->transformStamped.transform.rotation.x = q.x();
+    this->transformStamped.transform.rotation.y = q.y();
+    this->transformStamped.transform.rotation.z = q.z();
+    this->transformStamped.transform.rotation.w = q.w();
+    // send transform
+    this->br.sendTransform(transformStamped);
+  }
 
 pose KinematicsToOdometry::compute_euler_odometry(double vel_x, double vel_y, double vel_th){
   pose previous_pose;
