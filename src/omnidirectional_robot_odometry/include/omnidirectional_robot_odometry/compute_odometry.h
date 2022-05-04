@@ -1,8 +1,11 @@
 #include "geometry_msgs/TwistStamped.h"
 #include "nav_msgs/Odometry.h"
+//TF2
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2_ros/transform_broadcaster.h>
 #include <geometry_msgs/TransformStamped.h>
+//Reset Service
+#include "omnidirectional_robot_odometry/ResetOdometry.h"
 
 struct pose {
     double x;
@@ -17,8 +20,11 @@ private:
     ros::NodeHandle nh;
     ros::Subscriber sub_cmd_vel;
     ros::Publisher pub_odometry;
+    //TF2
     tf2_ros::TransformBroadcaster br;
     geometry_msgs::TransformStamped transformStamped;
+    //Service reset
+    ros::ServiceServer res_odom_service;
 
     double stamp_ns[2] = { -1, -1 };
     double init_pose_x;
@@ -29,5 +35,9 @@ private:
     void compute_odometry(const geometry_msgs::TwistStamped::ConstPtr& msg);
     pose compute_euler_odometry(double vel_x, double vel_y, double vel_th);
     pose compute_rungekutta_odometry(double vel_x, double vel_y, double vel_th);
+
     void pub_transform(const nav_msgs::Odometry msg);
+
+    bool reset_odometry(omnidirectional_robot_odometry::ResetOdometry::Request  &req,
+                        omnidirectional_robot_odometry::ResetOdometry::Response &res);
 };

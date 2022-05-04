@@ -6,6 +6,8 @@ ComputeOdometry::ComputeOdometry() {
     this->nh.getParam("/init_pose_x", this->init_pose_x);
     this->nh.getParam("/init_pose_y", this->init_pose_y);
     this->nh.getParam("/init_pose_th", this->init_pose_th);
+
+    this->res_odom_service = this->nh.advertiseService("reset_odom", &ComputeOdometry::reset_odometry, this);
 }
 
 void ComputeOdometry::compute_odometry(const geometry_msgs::TwistStamped::ConstPtr& msg) {
@@ -101,6 +103,20 @@ void ComputeOdometry::pub_transform(const nav_msgs::Odometry msg){
   this->transformStamped.transform.rotation.w = q.w();
   // send transform
   this->br.sendTransform(transformStamped);
+}
+
+bool ComputeOdometry::reset_odometry(omnidirectional_robot_odometry::ResetOdometry::Request  &req,
+                                        omnidirectional_robot_odometry::ResetOdometry::Response &res) {
+
+    res.old_x = this->current_pose.x;
+    res.old_y = this->current_pose.y;
+    res.old_th = this->current_pose.th;
+
+    this->current_pose.x = req.new_x;
+    this->current_pose.y = req.new_y;
+    this->current_pose.th = req.new_th;
+
+    return true;
 }
 
 int main(int argc, char **argv) {
