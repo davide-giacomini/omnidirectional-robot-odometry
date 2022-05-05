@@ -1,22 +1,29 @@
 <launch>
 
-    <!-- bag 1 initial pose -->
+    <!-- bag 1 initial pose and tf -->
+    <!-- bag 1 initial raw parameters (x, y, z, x, y, z, w): 0.00815962441265583 0.0030597213190048933 0.3687083423137665 -0.011577633209526539 -0.02075166068971157 -0.019595127552747726 0.9995256066322327 -->
     <param name="init_pose_x" value="0.00815962441265583"/>
     <param name="init_pose_y" value="0.0030597213190048933"/>
-    <param name="init_pose_th" value="-0.019595127552747726"/>
+    <param name="init_pose_th" value="-0.038734904526281436"/>
+    <node pkg="tf2_ros" type="static_transform_publisher" name="back_right" args="0.00815962441265583 0.0030597213190048933 0.3687083423137665 -0.011577633209526539 -0.02075166068971157 -0.019595127552747726 0.9995256066322327 world odom " />
 
-    <!-- bag 2 initial pose -->
+    <!-- bag 2 initial pose pose and tf -->
+    <!-- bag 2 initial raw parameters (x, y, z, x, y, z, w): 0.024221817031502724 0.003742524655535817 0.372348427772522 0.0338488332927227 -0.05557403340935707 -0.0028051661793142557 0.997876763343811 -->
     <!-- <param name="init_pose_x" value="0.024221817031502724"/>
     <param name="init_pose_y" value="0.003742524655535817"/>
-    <param name="init_pose_th" value="-0.0028051661793142557"/> -->
+    <param name="init_pose_th" value="-0.009418701789503428"/>
+    <node pkg="tf2_ros" type="static_transform_publisher" name="front_right" args="0.024221817031502724 0.003742524655535817 0.372348427772522 0.0338488332927227 -0.05557403340935707 -0.0028051661793142557 0.997876763343811 world odom " /> -->
 
-    <!-- bag 3 initial pose -->
+    <!-- bag 3 initial pose pose and tf -->
+    <!-- bag 3 initial raw parameters (x, y, z, x, y, z, w): 0.005460123997181654 0.03997037187218666 0.3703613579273224 -0.010593205690383911 -0.024768192321062088 -0.006751589477062225 0.9996143579483032 -->
     <!-- <param name="init_pose_x" value="0.005460123997181654"/>
     <param name="init_pose_y" value="0.03997037187218666"/>
-    <param name="init_pose_th" value="-0.006751589477062225"/> -->
+    <param name="init_pose_th" value="-0.012989612659950940"/> -->
+    <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="front_left" args="0.005460123997181654 0.03997037187218666 0.3703613579273224 -0.010593205690383911 -0.024768192321062088 -0.006751589477062225 0.9996143579483032 world odom " /> -->
 
     <node pkg="omnidirectional_robot_odometry" type="compute_velocities" name="compute_velocities"/>
     <node pkg="omnidirectional_robot_odometry" type="compute_wheel_speed" name="compute_wheel_speed"/>
-    <node pkg="omnidirectional_robot_odometry" type="compute_odometry" name="compute_odometry"/>
+    <node pkg="omnidirectional_robot_odometry" type="compute_odometry" name="compute_odometry" output="screen"/>
+
 
 </launch>

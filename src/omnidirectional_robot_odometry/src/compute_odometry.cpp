@@ -1,4 +1,5 @@
 #include "omnidirectional_robot_odometry/compute_odometry.h"
+#include <tf/transform_listener.h>
 
 // TODO: I don't know why the method doesn't work inside the class with dynamic reconfigure
 void choose_integration_method(int *integration_method, omnidirectional_robot_odometry::parametersConfig &config, uint32_t level);
@@ -38,10 +39,10 @@ void ComputeOdometry::compute_odometry(const geometry_msgs::TwistStamped::ConstP
     if (this->stamp_ns[0] == -1) {
     // Initialize the poses to the initial pose got in the parameter values.
     // TODO -> It can be done dynamically by getting the first values of the bag from `msg`. I did not do it because the assignment of the project required to do it statically.
-    //ODOM
     this->current_pose.x = this->init_pose_x;
     this->current_pose.y = this->init_pose_y;
     this->current_pose.th = this->init_pose_th;
+    //TODO -> I have to start from 0 in the odometry
 
     return;
   }
@@ -94,7 +95,7 @@ void ComputeOdometry::compute_odometry(const geometry_msgs::TwistStamped::ConstP
   // set header
   this->trans_world_odom.header.stamp = odom_msg.header.stamp;
   this->trans_world_odom.header.frame_id = "world";
-  this->trans_world_odom.child_frame_id = "odom";
+  this->trans_world_odom.child_frame_id = odom_msg.header.frame_id;
   // set x,y
   this->trans_world_odom.transform.translation.x = this->init_pose_x;
   this->trans_world_odom.transform.translation.y = this->init_pose_y;
@@ -184,10 +185,79 @@ void /*ComputeOdometry::*/choose_integration_method(int *integration_method, omn
     *integration_method = config.integration_method;
 }
 
+/**
+ * @brief This is useful to set the initial pose parameters.
+ * I copied and pasted the four values of the quaternions manually directly from the bag.
+ * I use the printed information for getting the yaw.
+ * 
+ */
+void convert_initial_quaternions() {
+  tf::Quaternion q1(-0.011577633209526539, -0.02075166068971157, -0.019595127552747726, 0.9995256066322327);
+  tf::Matrix3x3 m1(q1);
+  double roll1, pitch1, yaw1;
+  m1.getRPY(roll1, pitch1, yaw1);
+
+  tf::Quaternion q2(0.0338488332927227, -0.05557403340935707, -0.0028051661793142557, 0.997876763343811);
+  tf::Matrix3x3 m2(q2);
+  double roll2, pitch2, yaw2;
+  m2.getRPY(roll2, pitch2, yaw2);
+
+  tf::Quaternion q3(-0.010593205690383911, -0.024768192321062088, -0.006751589477062225, 0.9996143579483032);
+  tf::Matrix3x3 m3(q3);
+  double roll3, pitch3, yaw3;
+  m3.getRPY(roll3, pitch3, yaw3);
+
+  ROS_INFO("Roll 1: [%.18f]", roll1);
+  ROS_INFO("Pitch 1: [%.18f]", pitch1);
+  ROS_INFO("Yaw 1: [%.18f]", yaw1);
+
+  ROS_INFO("Roll 2: [%.18f]", roll2);
+  ROS_INFO("Pitch 2: [%.18f]", pitch2);
+  ROS_INFO("Yaw 2: [%.18f]", yaw2);
+
+  ROS_INFO("Roll 3: [%.18f]", roll3);
+  ROS_INFO("Pitch 3: [%.18f]", pitch3);
+  ROS_INFO("Yaw 3: [%.18f]", yaw3);
+}
+
+/**
+ * @brief Using the yaw calculated in the `convert_initial_quaternions` function,
+ * I set roll and pitch to 0 and calculate the resulting quaternions for each bag.
+ * Those quaternions could be useful for the transformation tf from world to odom.
+ * 
+ */
+void getting_initial_quaternions_from_pose() {
+
+    tf2::Quaternion q1;
+    q1.setRPY(0, 0, -0.038734904526281436);
+    tf2::Quaternion q2;
+    q2.setRPY(0, 0, -0.009418701789503428);
+    tf2::Quaternion q3;
+    q3.setRPY(0, 0, -0.012989612659950940);
+
+    ROS_INFO("Init x bag 1: [%.18f]", q1.x());
+    ROS_INFO("Init y bag 1: [%.18f]", q1.y());
+    ROS_INFO("Init z bag 1: [%.18f]", q1.z());
+    ROS_INFO("Init w bag 1: [%.18f]", q1.w());
+
+    ROS_INFO("Init x bag 2: [%.18f]", q2.x());
+    ROS_INFO("Init y bag 2: [%.18f]", q2.y());
+    ROS_INFO("Init z bag 2: [%.18f]", q2.z());
+    ROS_INFO("Init w bag 2: [%.18f]", q2.w());
+
+    ROS_INFO("Init x bag 3: [%.18f]", q3.x());
+    ROS_INFO("Init y bag 3: [%.18f]", q3.y());
+    ROS_INFO("Init z bag 3: [%.18f]", q3.z());
+    ROS_INFO("Init w bag 3: [%.18f]", q3.w());
+}
+
 int main(int argc, char **argv) {
   ros::init(argc, argv, "compute_odometry");
 
   ComputeOdometry co;
+
+  convert_initial_quaternions();
+  getting_initial_quaternions_from_pose();
   
   ros::spin();
 
