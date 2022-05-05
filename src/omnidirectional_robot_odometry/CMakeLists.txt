@@ -15,6 +15,7 @@ find_package(catkin REQUIRED COMPONENTS
   dynamic_reconfigure
   tf
   tf2
+  turtlesim
 )
 
 ## System dependencies are found with CMake's conventions
@@ -130,6 +131,10 @@ target_link_libraries(compute_velocities ${catkin_LIBRARIES})
 add_executable(compute_odometry src/compute_odometry.cpp)
 add_dependencies(compute_odometry ${catkin_EXPORTED_TARGETS})
 target_link_libraries(compute_odometry ${catkin_LIBRARIES})
+
+add_executable(tf2_broad src/broadcaster_tf2.cpp)
+target_link_libraries(tf2_broad ${catkin_LIBRARIES})
+
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}

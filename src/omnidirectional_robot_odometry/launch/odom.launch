@@ -18,5 +18,8 @@
     <node pkg="omnidirectional_robot_odometry" type="compute_velocities" name="compute_velocities"/>
     <node pkg="omnidirectional_robot_odometry" type="compute_wheel_speed" name="compute_wheel_speed"/>
     <node pkg="omnidirectional_robot_odometry" type="compute_odometry" name="compute_odometry"/>
+    <node pkg="omnidirectional_robot_odometry" type = "tf2_broad" name = "tf_broad"/>
+    <node pkg="turtlesim" type = "turtlesim_node" name = "turtlesim_node"/>
+    <node pkg="turtlesim" type = "turtle_teleop_key" name = "turtle_teleop_key"/>
 
 </launch>
