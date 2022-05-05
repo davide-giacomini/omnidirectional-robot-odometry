@@ -47,32 +47,35 @@ void ComputeOdometry::compute_odometry(const geometry_msgs::TwistStamped::ConstP
     return;
   }
 
+  // Velocities relative to base_link, hence to the robot frame.
   double vel_tau = msg->twist.linear.x;
   double vel_eta = msg->twist.linear.y;
   double vel_th = msg->twist.angular.z;
 
-  velocity vel_odom;
+  // Velocities relative to odom, hence to the odometry frame.
+  double vel_odom_x = vel_tau*cos(this->current_pose.th) - vel_eta*sin(this->current_pose.th);
+  double vel_odom_y = vel_tau*sin(this->current_pose.th) + vel_eta*cos(this->current_pose.th);
+  double vel_odom_th = vel_th;
 
   if (this->integration_method == 0) {
-    vel_odom = this->compute_euler_odometry(vel_tau, vel_eta, vel_th);
+    this->compute_euler_pose(vel_odom_x, vel_odom_y, vel_odom_th);
   }
   else if (this->integration_method == 1) {
-    vel_odom = this->compute_rungekutta_odometry(vel_tau, vel_eta, vel_th);
+    this->compute_rungekutta_pose(vel_odom_x, vel_odom_y, vel_odom_th);
   }
 
-  nav_msgs::Odometry odom_msg;
-  //Quaternion for theta
-  tf2::Quaternion q;
 
+  nav_msgs::Odometry odom_msg;
   // set header
   odom_msg.header.stamp = msg->header.stamp;
   odom_msg.header.frame_id = "odom";
-  odom_msg.child_frame_id = "base_link";
+  odom_msg.child_frame_id = msg->header.frame_id;
   // set position
   odom_msg.pose.pose.position.x = this->current_pose.x;
   odom_msg.pose.pose.position.y = this->current_pose.y;
   odom_msg.pose.pose.position.z = 0;
   // set theta
+  tf2::Quaternion q;
   q.setRPY(0, 0, this->current_pose.th);
   odom_msg.pose.pose.orientation.x = q.x();
   odom_msg.pose.pose.orientation.y = q.y();
@@ -81,8 +84,8 @@ void ComputeOdometry::compute_odometry(const geometry_msgs::TwistStamped::ConstP
   // set covariance
   odom_msg.pose.covariance.fill(0);
   // set twist
-  odom_msg.twist.twist.linear.x = vel_odom.x;
-  odom_msg.twist.twist.linear.y = vel_odom.y;
+  odom_msg.twist.twist.linear.x = vel_odom_x;
+  odom_msg.twist.twist.linear.y = vel_odom_y;
   odom_msg.twist.twist.linear.z = 0;
   odom_msg.twist.twist.angular.x = 0;
   odom_msg.twist.twist.angular.y = 0;
@@ -115,13 +118,12 @@ void ComputeOdometry::compute_odometry(const geometry_msgs::TwistStamped::ConstP
 /**
  * @brief Compute odometry using Euler integration
  * 
- * @param vel_x robot linear velocity along x
- * @param vel_y robot linear velocity along y
- * @param vel_th robot angular velocity around z
- * @return the previous pose of the robot
+ * @param vel_x robot linear velocity along odom axis x
+ * @param vel_y robot linear velocity along odom axis y
+ * @param vel_th robot angular velocity around odom axis z
+ * @return the previous pose of the robot with respect to odom
  */
-velocity ComputeOdometry::compute_euler_odometry(double vel_tau, double vel_eta, double vel_th){
-  velocity vel_relative_to_odom;
+pose ComputeOdometry::compute_euler_pose(double vel_x, double vel_y, double vel_th){
   pose previous_pose;
 
   previous_pose.x = this->current_pose.x;
@@ -130,28 +132,24 @@ velocity ComputeOdometry::compute_euler_odometry(double vel_tau, double vel_eta,
 
   double dt = (this->stamp_ns[1] - this->stamp_ns[0]) * pow(10.0, -9.0); // `dt` is in seconds.
 
-  vel_relative_to_odom.x = vel_tau*cos(previous_pose.th) - vel_eta*sin(previous_pose.th);
-  vel_relative_to_odom.y = vel_tau*sin(previous_pose.th) + vel_eta*cos(previous_pose.th);
-
-  this->current_pose.x = previous_pose.x + dt*vel_relative_to_odom.x;
-  this->current_pose.y = previous_pose.y + dt*vel_relative_to_odom.y;
+  this->current_pose.x = previous_pose.x + dt*vel_x;
+  this->current_pose.y = previous_pose.y + dt*vel_y;
   this->current_pose.th = previous_pose.th + dt*vel_th;
 
-  return vel_relative_to_odom;
+  return previous_pose;
 }
 
 /**
  * @brief Compute odometry using Runge-Kutta integration
  * 
- * @param vel_x robot linear velocity along x
- * @param vel_y robot linear velocity along y
- * @param vel_th robot angular velocity around z
+ * @param vel_x robot linear velocity along odom axis x
+ * @param vel_y robot linear velocity along odom axis y
+ * @param vel_th robot angular velocity around odom axis z
  * @return the previous pose of the robot
  */
-velocity ComputeOdometry::compute_rungekutta_odometry(double vel_x, double vel_y, double vel_th){
+pose ComputeOdometry::compute_rungekutta_pose(double vel_x, double vel_y, double vel_th){
     //TODO
-    velocity v;
-  return v;
+  return this->current_pose;
 }
 
 void ComputeOdometry::pub_transform(const nav_msgs::Odometry msg){

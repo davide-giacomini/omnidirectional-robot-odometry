@@ -16,11 +16,6 @@ struct pose {
     double th;
 };
 
-struct velocity {
-    double x;
-    double y;
-};
-
 class ComputeOdometry {
 public:
     ComputeOdometry();
@@ -46,8 +41,8 @@ private:
     int integration_method = 0;
 
     void compute_odometry(const geometry_msgs::TwistStamped::ConstPtr& msg);
-    velocity compute_euler_odometry(double vel_x, double vel_y, double vel_th);
-    velocity compute_rungekutta_odometry(double vel_x, double vel_y, double vel_th);
+    pose compute_euler_pose(double vel_x, double vel_y, double vel_th);
+    pose compute_rungekutta_pose(double vel_x, double vel_y, double vel_th);
 
     void pub_transform(const nav_msgs::Odometry msg);
 
