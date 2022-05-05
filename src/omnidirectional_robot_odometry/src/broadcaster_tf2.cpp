@@ -3,30 +3,29 @@
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2_ros/transform_broadcaster.h>
 #include <geometry_msgs/TransformStamped.h>
+#include <nav_msgs/Odometry.h>
 
 class TfBroad
 {
 public:
   TfBroad() {
-    sub = n.subscribe("/turtle1/pose", 1000, &TfBroad::callback, this);
+    sub = n.subscribe("/odom", 1000, &TfBroad::callback, this);
   }
 
-  void callback(const turtlesim::Pose::ConstPtr& msg){
+  void callback(const nav_msgs::Odometry::ConstPtr& msg){
     // set header
     transformStamped.header.stamp = ros::Time::now();
     transformStamped.header.frame_id = "world";
-    transformStamped.child_frame_id = "turtle";
+    transformStamped.child_frame_id = "base_link";
     // set x,y
-    transformStamped.transform.translation.x = msg->x;
-    transformStamped.transform.translation.y = msg->y;
+    transformStamped.transform.translation.x = msg->pose.pose.position.x;
+    transformStamped.transform.translation.y = msg->pose.pose.position.y;
     transformStamped.transform.translation.z = 0.0;
     // set theta
-    tf2::Quaternion q;
-    q.setRPY(0, 0, msg->theta);
-    transformStamped.transform.rotation.x = q.x();
-    transformStamped.transform.rotation.y = q.y();
-    transformStamped.transform.rotation.z = q.z();
-    transformStamped.transform.rotation.w = q.w();
+    transformStamped.transform.rotation.x = msg->pose.pose.orientation.x;
+    transformStamped.transform.rotation.y = msg->pose.pose.orientation.y;
+    transformStamped.transform.rotation.z = msg->pose.pose.orientation.z;
+    transformStamped.transform.rotation.w = msg->pose.pose.orientation.w;
     // send transform
     br.sendTransform(transformStamped);
   }
