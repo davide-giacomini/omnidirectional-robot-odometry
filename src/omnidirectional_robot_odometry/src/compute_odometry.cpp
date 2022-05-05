@@ -47,15 +47,17 @@ void ComputeOdometry::compute_odometry(const geometry_msgs::TwistStamped::ConstP
     return;
   }
 
-  double vel_x = msg->twist.linear.x;
-  double vel_y = msg->twist.linear.y;
+  double vel_tau = msg->twist.linear.x;
+  double vel_eta = msg->twist.linear.y;
   double vel_th = msg->twist.angular.z;
 
+  velocity vel_odom;
+
   if (this->integration_method == 0) {
-    this->compute_euler_odometry(vel_x, vel_y, vel_th);
+    vel_odom = this->compute_euler_odometry(vel_tau, vel_eta, vel_th);
   }
   else if (this->integration_method == 1) {
-    this->compute_rungekutta_odometry(vel_x, vel_y, vel_th);
+    vel_odom = this->compute_rungekutta_odometry(vel_tau, vel_eta, vel_th);
   }
 
   nav_msgs::Odometry odom_msg;
@@ -79,8 +81,8 @@ void ComputeOdometry::compute_odometry(const geometry_msgs::TwistStamped::ConstP
   // set covariance
   odom_msg.pose.covariance.fill(0);
   // set twist
-  odom_msg.twist.twist.linear.x = vel_x;
-  odom_msg.twist.twist.linear.y = vel_y;
+  odom_msg.twist.twist.linear.x = vel_odom.x;
+  odom_msg.twist.twist.linear.y = vel_odom.y;
   odom_msg.twist.twist.linear.z = 0;
   odom_msg.twist.twist.angular.x = 0;
   odom_msg.twist.twist.angular.y = 0;
@@ -93,21 +95,21 @@ void ComputeOdometry::compute_odometry(const geometry_msgs::TwistStamped::ConstP
 
   //TODO -> this is only a trial
   // set header
-  this->trans_world_odom.header.stamp = odom_msg.header.stamp;
-  this->trans_world_odom.header.frame_id = "world";
-  this->trans_world_odom.child_frame_id = odom_msg.header.frame_id;
-  // set x,y
-  this->trans_world_odom.transform.translation.x = this->init_pose_x;
-  this->trans_world_odom.transform.translation.y = this->init_pose_y;
-  this->trans_world_odom.transform.translation.z = 0;
-  // set theta
-  q.setRPY(0, 0, this->init_pose_th);
-  this->trans_world_odom.transform.rotation.x = q.x();
-  this->trans_world_odom.transform.rotation.y = q.y();
-  this->trans_world_odom.transform.rotation.z = q.z();
-  this->trans_world_odom.transform.rotation.w = q.w();
-  // send transform
-  this->br.sendTransform(trans_world_odom);
+  // this->trans_world_odom.header.stamp = odom_msg.header.stamp;
+  // this->trans_world_odom.header.frame_id = "world";
+  // this->trans_world_odom.child_frame_id = odom_msg.header.frame_id;
+  // // set x,y
+  // this->trans_world_odom.transform.translation.x = this->init_pose_x;
+  // this->trans_world_odom.transform.translation.y = this->init_pose_y;
+  // this->trans_world_odom.transform.translation.z = 0;
+  // // set theta
+  // q.setRPY(0, 0, this->init_pose_th);
+  // this->trans_world_odom.transform.rotation.x = q.x();
+  // this->trans_world_odom.transform.rotation.y = q.y();
+  // this->trans_world_odom.transform.rotation.z = q.z();
+  // this->trans_world_odom.transform.rotation.w = q.w();
+  // // send transform
+  // this->br.sendTransform(trans_world_odom);
 }
 
 /**
@@ -118,7 +120,8 @@ void ComputeOdometry::compute_odometry(const geometry_msgs::TwistStamped::ConstP
  * @param vel_th robot angular velocity around z
  * @return the previous pose of the robot
  */
-pose ComputeOdometry::compute_euler_odometry(double vel_x, double vel_y, double vel_th){
+velocity ComputeOdometry::compute_euler_odometry(double vel_tau, double vel_eta, double vel_th){
+  velocity vel_relative_to_odom;
   pose previous_pose;
 
   previous_pose.x = this->current_pose.x;
@@ -127,11 +130,14 @@ pose ComputeOdometry::compute_euler_odometry(double vel_x, double vel_y, double 
 
   double dt = (this->stamp_ns[1] - this->stamp_ns[0]) * pow(10.0, -9.0); // `dt` is in seconds.
 
-  this->current_pose.x = previous_pose.x + dt*vel_x;
-  this->current_pose.y = previous_pose.y + dt*vel_y;
+  vel_relative_to_odom.x = vel_tau*cos(previous_pose.th) - vel_eta*sin(previous_pose.th);
+  vel_relative_to_odom.y = vel_tau*sin(previous_pose.th) + vel_eta*cos(previous_pose.th);
+
+  this->current_pose.x = previous_pose.x + dt*vel_relative_to_odom.x;
+  this->current_pose.y = previous_pose.y + dt*vel_relative_to_odom.y;
   this->current_pose.th = previous_pose.th + dt*vel_th;
 
-  return previous_pose;
+  return vel_relative_to_odom;
 }
 
 /**
@@ -142,9 +148,10 @@ pose ComputeOdometry::compute_euler_odometry(double vel_x, double vel_y, double 
  * @param vel_th robot angular velocity around z
  * @return the previous pose of the robot
  */
-pose ComputeOdometry::compute_rungekutta_odometry(double vel_x, double vel_y, double vel_th){
+velocity ComputeOdometry::compute_rungekutta_odometry(double vel_x, double vel_y, double vel_th){
     //TODO
-  return this->current_pose;
+    velocity v;
+  return v;
 }
 
 void ComputeOdometry::pub_transform(const nav_msgs::Odometry msg){
@@ -153,16 +160,14 @@ void ComputeOdometry::pub_transform(const nav_msgs::Odometry msg){
   this->trans_odom_baselink.header.frame_id = msg.header.frame_id;
   this->trans_odom_baselink.child_frame_id = msg.child_frame_id;
   // set x,y
-  this->trans_odom_baselink.transform.translation.x = msg.pose.pose.orientation.x;
-  this->trans_odom_baselink.transform.translation.y = msg.pose.pose.orientation.y;
-  this->trans_odom_baselink.transform.translation.z = msg.pose.pose.orientation.z;
+  this->trans_odom_baselink.transform.translation.x = msg.pose.pose.position.x;
+  this->trans_odom_baselink.transform.translation.y = msg.pose.pose.position.y;
+  this->trans_odom_baselink.transform.translation.z = msg.pose.pose.position.z;
   // set theta
-  tf2::Quaternion q;
-  q.setRPY(0, 0, msg.twist.twist.angular.z);
-  this->trans_odom_baselink.transform.rotation.x = q.x();
-  this->trans_odom_baselink.transform.rotation.y = q.y();
-  this->trans_odom_baselink.transform.rotation.z = q.z();
-  this->trans_odom_baselink.transform.rotation.w = q.w();
+  this->trans_odom_baselink.transform.rotation.x = msg.pose.pose.orientation.x;
+  this->trans_odom_baselink.transform.rotation.y = msg.pose.pose.orientation.y;
+  this->trans_odom_baselink.transform.rotation.z = msg.pose.pose.orientation.z;
+  this->trans_odom_baselink.transform.rotation.w = msg.pose.pose.orientation.w;
   // send transform
   this->br.sendTransform(trans_odom_baselink);
 }
