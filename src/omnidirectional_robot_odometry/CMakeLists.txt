@@ -11,8 +11,10 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
   roscpp
   std_msgs
-  tf
+  tf2_ros
   dynamic_reconfigure
+  tf
+  tf2
 )
 
 ## System dependencies are found with CMake's conventions

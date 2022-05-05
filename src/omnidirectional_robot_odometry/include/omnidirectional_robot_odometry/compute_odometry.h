@@ -25,7 +25,8 @@ private:
     ros::Publisher pub_odometry;
     //TF2
     tf2_ros::TransformBroadcaster br;
-    geometry_msgs::TransformStamped transformStamped;
+    geometry_msgs::TransformStamped trans_odom_baselink;
+    geometry_msgs::TransformStamped trans_world_odom;
     //Service reset
     ros::ServiceServer res_odom_service;
 
