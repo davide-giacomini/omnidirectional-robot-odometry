@@ -131,6 +131,10 @@ add_executable(compute_odometry src/compute_odometry.cpp)
 add_dependencies(compute_odometry ${catkin_EXPORTED_TARGETS})
 target_link_libraries(compute_odometry ${catkin_LIBRARIES})
 
+add_executable(calibration src/calibration.cpp)
+add_dependencies(calibration ${catkin_EXPORTED_TARGETS})
+target_link_libraries(calibration ${catkin_LIBRARIES})
+
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
 #   src/${PROJECT_NAME}/omnidirectional_robot_odometry.cpp
