@@ -8,16 +8,45 @@ The project is implemented in ROS, an open-source robotics middleware suit.
 
 ## Description
 
-In this project we were required to read from a bag file some information and calculate the odometry and other parameters of the robot.
+In this project we were required to read from a bag file some information and calculate the odometry and other parameters an omnidirectional robot. A semple is illustrated below.
+
+<p align="left">
+    <img src="assets/images/robot-model.png" style="height:150px;"/>
+</p>
 
 We were given:
-- Wheels encoder state
+- Wheels encoder state:
     - RPM (noisy)
     - Ticks (more accurate)
-- Nominal robot parameters: `r`, `l`, `w` encoder CPR `N`, gear ratio `T`
+- Nominal robot parameters:
+    - Wheel radius (*r*) = 0.07m (could be a bit off)
+    - Wheel position along x (*l*) = 0.200m
+    - Wheel position along y (*w*) = 0.169m
+    - Gear ratio (*T*) = 5:1
+    - Encoder resolution(*N*): 42 CPR (Counts Per Rev.) (could be a bit off)
 - Ground truth (GT) pose of the robot (acquired with OptiTrack)
 
 And we were required to:
+- Compute odometry using appropriate kinematics
+    - Compute robot linear and angular velocities `v`, `⍵` from wheel encoders
+    - Compute odometry using both Euler and Runge-Kutta integration methods
+        - Add ROS parameters for initial pose
+    - Calibrate (fine-tune) robot parameters to match ground truth
+- Compute wheel control speeds from `v`, `⍵`
+- Add a service to reset the odometry to a specified pose **(x,y,θ)**
+- Use dynamic reconfigure to select between the desired integration method
+
+We created a packet which contains three different nodes. Each node corresponds to a source code file, and the sources are located [here](src/omnidirectional_robot_odometry/src), under the `src` folder inside the packet `omnidirectional_robot_odometry`. Each node is in charge of a different task, which is explained more in detail in the next sections.
+
+## Compute robot velocities
+
+Given the wheel speeds of the robot from the bags, we were required to compute the robot linear and angular velocities. As a reference, we considered the formulas developed by [Taheri et al.](#1) for a mecanum wheeled mobile robot.
+
+In particolar, I will show the formulas here below:
+
+&#623;<sub>fl</sub> = (v<sub>x</sub> - v<sub>y</sub> - (l<sub>x</sub> + l<sub>y</sub>)*&#623;) * 1&#47;r
+
+The node [compute_velocities](src/omnidirectional_robot_odometry/src/compute_velocities.cpp) takes the wh
 
 
 ## Getting Started
@@ -29,3 +58,8 @@ And we were required to:
 
 - Davide Giacomini ([GitHub](https://github.com/davide-giacomini), [Linkedin](https://www.linkedin.com/in/davide-giacomini/), [email](mailto://giacomini.davide@outlook.com))
 - Giuseppe Cerruto ([GitHub](https://github.com/GiuseppeCerruto))
+
+## References
+
+<a id="1">[1]</a> 
+Taheri, Hamid, Bing Qiao, and Nurallah Ghaeminezhad. "Kinematic model of a four mecanum wheeled mobile robot." International journal of computer applications 113.3 (2015): 6-9.
