@@ -61,6 +61,13 @@ void ComputeOdometry::compute_odometry(const geometry_msgs::TwistStamped::ConstP
     this->compute_euler_pose(vel_odom_x, vel_odom_y, vel_odom_th);
   }
   else if (this->integration_method == 1) {
+    //TODO -> clean the code
+    double dt = (this->stamp_ns[1] - this->stamp_ns[0]) * pow(10.0, -9.0); // `dt` is in seconds.
+    double direction = this->current_pose.th + ( vel_th * dt ) / 2.0;
+    vel_odom_x = vel_tau*cos(direction) - vel_eta*sin(direction);
+    vel_odom_y = vel_tau*sin(direction) + vel_eta*cos(direction);
+    vel_odom_th = vel_th;
+
     this->compute_rungekutta_pose(vel_odom_x, vel_odom_y, vel_odom_th);
   }
 
@@ -95,24 +102,6 @@ void ComputeOdometry::compute_odometry(const geometry_msgs::TwistStamped::ConstP
 
   this->pub_odometry.publish(odom_msg);
   this->pub_transform(odom_msg);
-
-  //TODO -> this is only a trial
-  // set header
-  // this->trans_world_odom.header.stamp = odom_msg.header.stamp;
-  // this->trans_world_odom.header.frame_id = "world";
-  // this->trans_world_odom.child_frame_id = odom_msg.header.frame_id;
-  // // set x,y
-  // this->trans_world_odom.transform.translation.x = this->init_pose_x;
-  // this->trans_world_odom.transform.translation.y = this->init_pose_y;
-  // this->trans_world_odom.transform.translation.z = 0;
-  // // set theta
-  // q.setRPY(0, 0, this->init_pose_th);
-  // this->trans_world_odom.transform.rotation.x = q.x();
-  // this->trans_world_odom.transform.rotation.y = q.y();
-  // this->trans_world_odom.transform.rotation.z = q.z();
-  // this->trans_world_odom.transform.rotation.w = q.w();
-  // // send transform
-  // this->br.sendTransform(trans_world_odom);
 }
 
 /**
@@ -148,8 +137,19 @@ pose ComputeOdometry::compute_euler_pose(double vel_x, double vel_y, double vel_
  * @return the previous pose of the robot
  */
 pose ComputeOdometry::compute_rungekutta_pose(double vel_x, double vel_y, double vel_th){
-    //TODO
-  return this->current_pose;
+  pose previous_pose;
+
+  previous_pose.x = this->current_pose.x;
+  previous_pose.y = this->current_pose.y;
+  previous_pose.th = this->current_pose.th;
+
+  double dt = (this->stamp_ns[1] - this->stamp_ns[0]) * pow(10.0, -9.0); // `dt` is in seconds.
+
+  this->current_pose.x = previous_pose.x + dt*vel_x;
+  this->current_pose.y = previous_pose.y + dt*vel_y;
+  this->current_pose.th = previous_pose.th + dt*vel_th;
+
+  return previous_pose;
 }
 
 void ComputeOdometry::pub_transform(const nav_msgs::Odometry msg){
