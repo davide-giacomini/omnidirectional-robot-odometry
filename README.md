@@ -31,22 +31,23 @@ Finally are defined `CMakeLists.txt` and `package.xml` for compilation purposes.
 
 Clone the repository and change directory:
 ```
-git clone https://github.com/davide-giacomini/omnidirectional-robot-odometry.git
-cd omnidirectional-robot-odometry/
+$ git clone https://github.com/davide-giacomini/omnidirectional-robot-odometry.git
+$ cd omnidirectional-robot-odometry/
 ```
 Build the environment with catkin:
 ```
-catkin_make
+$ catkin_make
 ```
 
 Add ROS worspace to your system. Add the end of the `bashrc` file the path to the `devel/setup.bash` file:
 ```
-echo "source </path/to/project/folder/>omnidirectional-robot-odometry-master/devel/setup.bash" >> ~/.bashrc
+$ echo "source </path/to/project/folder/>omnidirectional-robot-odometry/devel/setup.bash" >> ~/.bashrc
+$ source ~/.bashrc
 ```
 
 With the launch file you can start all the nodes at the same time:
 ```
-roslaunch omnidirectional_robot_odometry odom.launch
+$ roslaunch omnidirectional_robot_odometry odom.launch
 ```
 
 Once started, you can use the bags to read from the topics. Notice that the [launch file](src/omnidirectional_robot_odometry/launch/odom.launch) has three different transforms, depending on the bag file used. If you want to correctly visualize the translation from the GT `world` to the `odom` frame, uncomment only the static transformation correspondent to the bag you are using. For example, the static transformation of the first bag is this one:
@@ -55,6 +56,36 @@ Once started, you can use the bags to read from the topics. Notice that the [lau
 ```
 
 Uncomment it when you want to use the first bag.
+
+### Using reset odometry service
+
+To reset the odometry at runtime, you can type on command line:
+```
+rosservice call /reset_odom <x> <y> <theta>
+```
+For example:
+```
+rosservice call /reset_odom 2 2 0
+```
+
+Where you put number inside the brackets. Notice that if you want to put a negative number, you must type `--` before the parameters. For example:
+```
+rosservice call /reset_odom -- -1 2.1 1.3
+```
+
+### Using dynamic reconfigure
+
+If you want to change at runtime the odometry integration method, you can type on command line:
+```
+rosrun rqt_reconfigure rqt_reconfigure
+```
+
+It will open a window where you can easily choose between Euler and Runge-Kutta integration method:
+
+<p align="left">
+    <img src="assets/images/dynamic-reconfigure.png" style="height:200px;"/>
+</p>
+
 
 ## Project Description
 
@@ -190,7 +221,7 @@ The structure of the custom message can be found in the file `CustomRpm.msg` und
 
 ## Reset Service
 
-We were asked to define a service for resetting the odometry to any given pose (x,y,&theta;). The file `ResetOdometry.srv` under the [srv/](src/omnidirectional_robot_odometry/srv/) folder defines a service that takes as input the x, y and &theta;. The function `ComputeOdometry::reset_odometry` in [compute_odometry.cpp](src/omnidirectional_robot_odometry/src/compute_odometry.cpp.cpp) takes as input the pose given and resets even at runtime the odometry.
+We were asked to define a service for resetting the odometry to any given pose (x,y,&theta;). The file `ResetOdometry.srv` under the [srv/](src/omnidirectional_robot_odometry/srv/) folder defines a service called `/reset_odometry` that takes as input the x, y and &theta;. The function `ComputeOdometry::reset_odometry` in [compute_odometry.cpp](src/omnidirectional_robot_odometry/src/compute_odometry.cpp.cpp) takes as input the pose given and resets even at runtime the odometry.
 
 ## Integration Method Selector
 
