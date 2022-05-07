@@ -100,6 +100,29 @@ Putting all together, the three equations for Runge-Kutta are:
 - y<sub>k+1</sub> = y<sub>k</sub> + v<sub>&tau;<sub>k</sub></sub>sin(&theta;<sub>k</sub> + <sup>&omega;<sub>k</sub>&Delta;T</sup> &#8725; <sub>2</sub>)&#8729;&Delta;T - v<sub>&eta;<sub>k</sub></sub>cos(&theta;<sub>k</sub> + <sup>&omega;<sub>k</sub>&Delta;T</sup> &#8725; <sub>2</sub>)&#8729;&Delta;T
 - &theta;<sub>k+1</sub> = &theta;<sub>k</sub> + &omega;<sub>k</sub>&#8729;&Delta;T
 
+## ROS parameters for initial pose
+
+We were required to add ROS parameters for defining the initial pose of the robot (x, y, &theta;). You can find them in the [launch file](src/omnidirectional_robot_odometry/launch/odom.launch), at line 3-4-5:
+
+```
+<param name="init_pose_x" value="0"/>
+<param name="init_pose_y" value="0"/>
+<param name="init_pose_th" value="0"/>
+```
+
+Those values are then used for initializing the initial pose in the [compute_odometry](src/omnidirectional_robot_odometry/src/compute_odometry.cpp) node.
+
+Notice that the initial pose values are referred to the `odom` frame. Considered that at the beginning of the odometry, `base_link` overlaps `odom`, those values are put to zero.
+
+## TF tree
+
+In the [launch file](src/omnidirectional_robot_odometry/launch/odom.launch) you can also find three different TF static transforms `world` &#10132; `odom`. This is because the topic `robot/pose` of the bags refers to the frame `world`, hence we implemented a static translation taking into account the first values of the ground truth. In this way, our odometry better overlaps the GT odometry when visualized on `rviz`. There are three different transforms because each bag starts from a different position `world`.
+
+Below we show the structure of the final TF tree:
+
+<p align="left">
+    <img src="assets/images/TF-tree.png" style="height:250px;"/>
+</p>
 
 ## Getting Started
 
