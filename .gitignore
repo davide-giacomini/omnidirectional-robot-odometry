@@ -2,3 +2,4 @@
 build/
 devel/
 frames.gv
+.catkin_workspace

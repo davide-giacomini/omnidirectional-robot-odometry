@@ -29,7 +29,32 @@ Finally are defined `CMakeLists.txt` and `package.xml` for compilation purposes.
 
 ## Getting Started
 
+Clone the repository and change directory:
+```
+git clone https://github.com/davide-giacomini/omnidirectional-robot-odometry.git
+cd omnidirectional-robot-odometry/
+```
+Build the environment with catkin:
+```
+catkin_make
+```
 
+Add ROS worspace to your system. Add the end of the `bashrc` file the path to the `devel/setup.bash` file:
+```
+echo "source </path/to/project/folder/>omnidirectional-robot-odometry-master/devel/setup.bash" >> ~/.bashrc
+```
+
+With the launch file you can start all the nodes at the same time:
+```
+roslaunch omnidirectional_robot_odometry odom.launch
+```
+
+Once started, you can use the bags to read from the topics. Notice that the [launch file](src/omnidirectional_robot_odometry/launch/odom.launch) has three different transforms, depending on the bag file used. If you want to correctly visualize the translation from the GT `world` to the `odom` frame, uncomment only the static transformation correspondent to the bag you are using. For example, the static transformation of the first bag is this one:
+```
+<node pkg="tf2_ros" type="static_transform_publisher" name="back_right" args="0.00815962441265583 0.0030597213190048933 0.3687083423137665 -0.011577633209526539 -0.02075166068971157 -0.019595127552747726 0.9995256066322327 world odom " />
+```
+
+Uncomment it when you want to use the first bag.
 
 ## Project Description
 
