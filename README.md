@@ -29,11 +29,20 @@ Finally are defined `CMakeLists.txt` and `package.xml` for compilation purposes.
 
 ## Getting Started
 
-Clone the repository and change directory:
+You can either clone the repository and change directory:
 ```
 $ git clone https://github.com/davide-giacomini/omnidirectional-robot-odometry.git
 $ cd omnidirectional-robot-odometry/
 ```
+
+Or you can download the zip file, and unzip it where you prefer and change the name of the directory in `omnidirectional-robot-odometry/`. Then, you change directory:
+```
+$ unzip <directory_name.zip> -d <destination_folder>
+$ cd <path/to/destination_folder>
+$ mv <directory_name/> omnidirectional-robot-odometry/
+$ cd omnidirectional-robot-odometry
+```
+
 Build the environment with catkin:
 ```
 $ catkin_make
@@ -229,8 +238,8 @@ We were finally required to use dynamic reconfigure to select the odometry integ
 
 ## Authors
 
-- Davide Giacomini ([GitHub](https://github.com/davide-giacomini), [Linkedin](https://www.linkedin.com/in/davide-giacomini/), [email](mailto://giacomini.davide@outlook.com))
-- Giuseppe Cerruto ([GitHub](https://github.com/GiuseppeCerruto))
+- Davide Giacomini ([GitHub](https://github.com/davide-giacomini), [Linkedin](https://www.linkedin.com/in/davide-giacomini/), [email](mailto://giacomini.davide@outlook.com)) --- Codice Persona: 10567357
+- Giuseppe Cerruto ([GitHub](https://github.com/GiuseppeCerruto)) --- Codice Persona: 10749409
 
 ## References
 
