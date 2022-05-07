@@ -42,14 +42,19 @@ We created a packet which contains three different nodes. Each node corresponds 
 
 Given the wheel speeds of the robot from the bags, we were required to compute the robot linear and angular velocities. As a reference, we considered the formulas developed by [Taheri et al.](#1) for a mecanum wheeled mobile robot.
 
-In particular, we are interested in the formulas of equation 22, 23 and 24 in the paper, which we report below:
-- v<sub>x</sub>(t) = ( &#623;<sub>fl</sub> + &#623;<sub>fr</sub> + &#623;<sub>rl</sub> + &#623;<sub>rr</sub> ) * r&#47;4
-- v<sub>y</sub>(t) = ( - &#623;<sub>fl</sub> + &#623;<sub>fr</sub> + &#623;<sub>rl</sub> - &#623;<sub>rr</sub> ) * r&#47;4
-- &#623;<sub>z</sub>(t) = ( - &#623;<sub>fl</sub> + &#623;<sub>fr</sub> - &#623;<sub>rl</sub> + &#623;<sub>rr</sub> ) * r &#47;( 4(l<sub>x</sub> + l<sub>y</sub>) )
+[comment]: < special entity html codes: https://www.science.co.il/internet/html/Greek-characters.php, https://www.toptal.com/designers/htmlarrows/math/, and others sites like >
+In particular, we are interested in the equations 22, 23 and 24 of the paper, which we report below:
+- v<sub>x</sub>(t) = ( &omega;<sub>fl</sub> + &omega;<sub>fr</sub> + &omega;<sub>rl</sub> + &omega;<sub>rr</sub> ) &#8729; <sup>r</sup> &#8725; <sub>4</sub>
+- v<sub>y</sub>(t) = ( - &omega;<sub>fl</sub> + &omega;<sub>fr</sub> + &omega;<sub>rl</sub> - &omega;<sub>rr</sub> ) &#8729; <sup>r</sup> &#8725; <sub>4</sub>
+- &omega;<sub>z</sub>(t) = ( - &omega;<sub>fl</sub> + &omega;<sub>fr</sub> - &omega;<sub>rl</sub> + &omega;<sub>rr</sub> ) &#8729; <sup>r</sup> &#8725; <sub>4(l<sub>x</sub> + l<sub>y</sub>)</sub>
 
 Where, in our case, the subscripts refer to the position of the wheel (*fl* = front left, *rr* = rear right, etc.).
 
-The node [compute_velocities](src/omnidirectional_robot_odometry/src/compute_velocities.cpp) takes the wheel speeds published in the topic `wheel_states` by the bags, and then computes the angular and linear velocities using the aformentioned formulas. Considering that we were required to use the ticks and not the RPM, we needed to convert the ticks of the topic `wheel_states` in angular velocity of each wheel... 
+The node "[compute_velocities](src/omnidirectional_robot_odometry/src/compute_velocities.cpp)" takes the wheel ticks published in the topic `wheel_states` by the bags, and then easily computes the angular velocity of each speed by using this equation:
+
+&omega; = ( <sup>&Delta;<sub>ticks</sub></sup> &#8725; <sub>&Delta;<sub>time</sub></sub> ) &#8729; ( <sup>1</sup> &#8725; <sub>N</sub> ) &#8729; ( <sup>1</sup> &#8725; <sub>T</sub> ) &#8729; 2&pi;
+
+Where <sup>&Delta;<sub>ticks</sub></sup> &#8725; <sub>&Delta;<sub>time</sub></sub> refers to the difference between the number of ticks divided by the period of time that have been measured. Once computing each angular velocity, the robot velocities can be computed using the aformentioned three equations, and they are eventually published as topic `cmd_vel`.
 
 
 ## Getting Started
