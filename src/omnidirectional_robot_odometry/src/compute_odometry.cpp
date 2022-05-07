@@ -173,15 +173,37 @@ void ComputeOdometry::pub_transform(const nav_msgs::Odometry msg){
 bool ComputeOdometry::reset_odometry(omnidirectional_robot_odometry::ResetOdometry::Request  &req,
                                         omnidirectional_robot_odometry::ResetOdometry::Response &res) {
 
-    res.old_x = this->current_pose.x;
-    res.old_y = this->current_pose.y;
-    res.old_th = this->current_pose.th;
+    // res.old_x = this->current_pose.x;
+    // res.old_y = this->current_pose.y;
+    // res.old_th = this->current_pose.th;
 
-    this->current_pose.x = req.new_x;
-    this->current_pose.y = req.new_y;
-    this->current_pose.th = req.new_th;
+    // this->current_pose.x = req.new_x;
+    // this->current_pose.y = req.new_y;
+    // this->current_pose.th = req.new_th;
 
-    return true;
+  // set header
+  this->trans_world_odom.header.stamp = ros::Time::now();
+  this->trans_world_odom.header.frame_id = "world";
+  this->trans_world_odom.child_frame_id = "odom";
+  // set x,y
+  this->trans_world_odom.transform.translation.x = req.new_x;
+  this->trans_world_odom.transform.translation.y = req.new_y;
+  this->trans_world_odom.transform.translation.z = 0;
+  // set theta
+  tf2::Quaternion q;
+  q.setRPY(0, 0, req.new_th);
+  this->trans_world_odom.transform.rotation.x = q.x();
+  this->trans_world_odom.transform.rotation.y = q.y();
+  this->trans_world_odom.transform.rotation.z = q.z();
+  this->trans_world_odom.transform.rotation.w = q.w();
+  // send transform
+  this->br.sendTransform(trans_world_odom);
+
+  this->current_pose.x = 0;
+  this->current_pose.y = 0;
+  this->current_pose.th = 0;
+
+  return true;
 }
 
 void /*ComputeOdometry::*/choose_integration_method(int *integration_method, omnidirectional_robot_odometry::parametersConfig &config, uint32_t level) {

@@ -6,9 +6,32 @@ The project is implemented in ROS, an open-source robotics middleware suit.
 
 ## Requirements
 
-Knowing ROS
+- ROS Melodic (Noetic is okay too)
+- C++
+- Ubuntu 18.04 (20.04 is okay too)
 
-## Description
+## Project structure
+
+The project contains one package (`omnidirectional_robot_odometry`), which root folder is the [src/omnidirectional_robot_odometry/](src/omnidirectional_robot_odometry/) folder. We will consider this as root folder.
+
+The source files are under the [src/](src/omnidirectional_robot_odometry/src/) folder:
+- `compute_odometry.cpp`: it deals with computing and resetting the odometry. It also broadcasts the odometry with the TF transforms.
+- `compute_velocities.cpp`: it computes the robot velocities starting from the wheels information provided by the bag files.
+- `compute_wheel_speed`: it computes the angular velocity of each wheel starting from the robot velocities.
+
+Under the [include/omnidirectional_robot_odometry/](src/omnidirectional_robot_odometry/include/omnidirectional_robot_odometry/) folder there are all the header files, plus an utility file used for some constants.
+
+The [launch file](src/omnidirectional_robot_odometry/launch/odom.launch) starts together the three nodes and is also used for static transforms and ROS parameters.
+
+Under [srv/](src/omnidirectional_robot_odometry/srv/), [msg/](src/omnidirectional_robot_odometry/msg/) and [cfg/](src/omnidirectional_robot_odometry/cfg/) there are, respectively, the reset odometry service definition, the custom message definition for the RPMs, and the dynamic configuration definition for changing the integration method at runtime.
+
+Finally are defined `CMakeLists.txt` and `package.xml` for compilation purposes.
+
+## Getting Started
+
+
+
+## Project Description
 
 In this project we were required to read from a bag file some information and calculate the odometry and other parameters an omnidirectional robot. A semple is illustrated below.
 
@@ -124,10 +147,29 @@ Below we show the structure of the final TF tree:
     <img src="assets/images/TF-tree.png" style="height:250px;"/>
 </p>
 
-## Getting Started
+## Compute Control
 
+We were required to compute wheel speeds in RPM starting from the velocities calculated in [compute_velocities](src/omnidirectional_robot_odometry/src/compute_velocities.cpp).
 
+The node [compute_wheel_speed](src/omnidirectional_robot_odometry/src/compute_wheel_speed.cpp) takes the velocities from the topic `cmd_vel` and then computes each wheel angular velocity using the system of equations number 20 of [Taheri et al.](#1). We report below the equations:
+- &omega;<sub>fl</sub> = ( v<sub>x</sub> - v<sub>y</sub> - (l<sub>x</sub> + l<sub>y</sub>)&#8729;&omega;<sub>z</sub> ) &#8729; <sup>1</sup> &#8725; <sub>r</sub>
+- &omega;<sub>fr</sub> = ( v<sub>x</sub> + v<sub>y</sub> + (l<sub>x</sub> + l<sub>y</sub>)&#8729;&omega;<sub>z</sub> ) &#8729; <sup>1</sup> &#8725; <sub>r</sub>
+- &omega;<sub>rl</sub> = ( v<sub>x</sub> + v<sub>y</sub> - (l<sub>x</sub> + l<sub>y</sub>)&#8729;&omega;<sub>z</sub> ) &#8729; <sup>1</sup> &#8725; <sub>r</sub>
+- &omega;<sub>rr</sub> = ( v<sub>x</sub> - v<sub>y</sub> + (l<sub>x</sub> + l<sub>y</sub>)&#8729;&omega;<sub>z</sub> ) &#8729; <sup>1</sup> &#8725; <sub>r</sub>
 
+Subsequently, the node publishes the angular velocities as topic `wheels_rpm` using a **custom** message, called `CustomRpm`.
+
+### CustomRpm Structure
+
+The structure of the custom message can be found in the file `CustomRpm.msg` under the [msg/](src/omnidirectional_robot_odometry/msg/) folder. It has got an `Header` and one `float64` for each wheel. The `stamp` and the `frame_id` of the header are filled with the `stamp` and the `frame_id` of the message taken from the topic `cmd_vel`.
+
+## Reset Service
+
+We were asked to define a service for resetting the odometry to any given pose (x,y,&theta;). The file `ResetOdometry.srv` under the [srv/](src/omnidirectional_robot_odometry/srv/) folder defines a service that takes as input the x, y and &theta;. The function `ComputeOdometry::reset_odometry` in [compute_odometry.cpp](src/omnidirectional_robot_odometry/src/compute_odometry.cpp.cpp) takes as input the pose given and resets even at runtime the odometry.
+
+## Integration Method Selector
+
+We were finally required to use dynamic reconfigure to select the odometry integration method (either Euler or Runge-Kutta). The reconfiguration is defined in `parameters.cfg`, under the folder [cfg/](src/omnidirectional_robot_odometry/cfg/). The constants "Euler" and "RK" are then used in [compute_odometry.cpp](src/omnidirectional_robot_odometry/src/compute_odometry.cpp) for deciding the integration method at runtime.
 
 ## Authors
 
