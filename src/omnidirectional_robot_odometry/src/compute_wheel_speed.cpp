@@ -28,11 +28,12 @@ wheels_speed ComputeControl::compute_wheels_speed(double vel_x, double vel_y, do
     double r = Util::r;
     double l = Util::l;
     double w = Util::w;
+    double T = Util::T;
 
-    my_wheels_speed.rpm_fl = (1.0/r) * ( vel_x - vel_y - vel_th*(l+w) ) * 60.0;
-    my_wheels_speed.rpm_fr = (1.0/r) * ( vel_x + vel_y + vel_th*(l+w) ) * 60.0;
-    my_wheels_speed.rpm_rl = (1.0/r) * ( vel_x + vel_y - vel_th*(l+w) ) * 60.0;
-    my_wheels_speed.rpm_rr = (1.0/r) * ( vel_x - vel_y + vel_th*(l+w) ) * 60.0;
+    my_wheels_speed.rpm_fl = (1.0/r) * ( vel_x - vel_y - vel_th*(l+w) ) * 60.0 * T;
+    my_wheels_speed.rpm_fr = (1.0/r) * ( vel_x + vel_y + vel_th*(l+w) ) * 60.0 * T;
+    my_wheels_speed.rpm_rl = (1.0/r) * ( vel_x + vel_y - vel_th*(l+w) ) * 60.0 * T;
+    my_wheels_speed.rpm_rr = (1.0/r) * ( vel_x - vel_y + vel_th*(l+w) ) * 60.0 * T;
 
     return my_wheels_speed;
 }
