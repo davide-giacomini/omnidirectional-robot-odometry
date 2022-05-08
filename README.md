@@ -76,12 +76,12 @@ To reset the odometry at runtime, you can type on command line:
 ```
 rosservice call /reset_odom <x> <y> <theta>
 ```
-For example:
+Where you put numbers inside the brackets. For example:
 ```
 rosservice call /reset_odom 2 2 0
 ```
 
-Where you put number inside the brackets. Notice that if you want to put a negative number, you must type `--` before the parameters. For example:
+Notice that if you want to put a negative number, you must type `--` before the parameters. For example:
 ```
 rosservice call /reset_odom -- -1 2.1 1.3
 ```
