@@ -54,6 +54,8 @@ $ echo "source </path/to/project/folder/>omnidirectional-robot-odometry/devel/se
 $ source ~/.bashrc
 ```
 
+Warning: In case you have already define in your `bashrc` file a path for another workspace, comment or delete it. Each machine must have only one workspace defined.
+
 With the launch file you can start all the nodes at the same time:
 ```
 $ roslaunch omnidirectional_robot_odometry odom.launch
@@ -98,10 +100,10 @@ It will open a window where you can easily choose between Euler and Runge-Kutta 
 
 ## Project Description
 
-In this project we were required to read from a bag file some information and calculate the odometry and other parameters an omnidirectional robot. A semple is illustrated below.
+In this project we were required to read from a bag file some information and calculate the odometry and other parameters of an omnidirectional robot. A semple is illustrated below.
 
 <p align="left">
-    <img src="assets/images/robot-model.png" style="height:150px;"/>
+    <img src="assets/images/robot-model.png" style="height:200px;"/>
 </p>
 
 We were given:
@@ -126,7 +128,7 @@ And we were required to:
 - Add a service to reset the odometry to a specified pose **(x,y,θ)**
 - Use dynamic reconfigure to select between the desired integration method
 
-We created a packet which contains three different nodes. Each node corresponds to a source code file, and the sources are located [here](src/omnidirectional_robot_odometry/src), under the `src` folder inside the packet `omnidirectional_robot_odometry`. Each node is in charge of a different task, which is explained more in detail in the next sections.
+We created a package which contains three different nodes. Each node corresponds to a source code file and it is in charge of a different task, which is explained more in detail in the next sections.
 
 ## Compute robot velocities
 
@@ -144,7 +146,7 @@ The node "[compute_velocities](src/omnidirectional_robot_odometry/src/compute_ve
 
 &omega; = ( <sup>&Delta;<sub>ticks</sub></sup> &#8725; <sub>&Delta;<sub>time</sub></sub> ) &#8729; ( <sup>1</sup> &#8725; <sub>N</sub> ) &#8729; ( <sup>1</sup> &#8725; <sub>T</sub> ) &#8729; 2&pi;
 
-Where <sup>&Delta;<sub>ticks</sub></sup> &#8725; <sub>&Delta;<sub>time</sub></sub> refers to the difference between the number of ticks divided by the period of time that have been measured. Once computing each angular velocity, the robot velocities can be computed using the aformentioned three equations, and they are eventually published as topic `cmd_vel`.
+Where <sup>&Delta;<sub>ticks</sub></sup> &#8725; <sub>&Delta;<sub>time</sub></sub> refers to the difference between the number of ticks divided by the period of time that has been measured. Please notice that we divided by the gear ratio because the encoders are located in the motors of the wheels. Once computing each angular velocity, the robot velocities can be computed using the aformentioned three equations, and they are eventually published as topic `cmd_vel`.
 
 ## Compute odometry
 
@@ -156,14 +158,14 @@ All of this can be found in the node "[compute_odometry](src/omnidirectional_rob
 
 ### Euler integration method
 
-We used as a reference the set of slides of Professor Matteucci [[2]](#2). From now on we will consider our `odom` frame as the fixed frame of the slides, and our `base_link` frame as the mobile frame of the robot. In case of a *differential drive* (slide 22), it can be seen that we have the x axis of the `base_link` frame always parallel to the direction of the velocity of the robot. This is not true for a *mecanum wheeled robot*, where we had to take into account both the parallel and perpendicular component of the velocity.
+We used as a reference the set of slides of Professor Matteucci [[2]](#2). From now on we will consider our `odom` frame as the fixed frame of the slides, and our `base_link` frame as the mobile frame of the robot. In case of a *differential drive* (slide 22), it can be seen that we have the x axis of the `base_link` frame always parallel to the direction of the velocity of the robot. This is not true for a *mecanum wheeled robot*, where we have to take into account both the parallel and perpendicular component of the velocity.
 
 At slide number 27, the Euler integration method for *differential drive* is illustrated. We can see that v<sub>k</sub>cos&theta;<sub>k</sub> = v<sub>x</sub>(k) and v<sub>k</sub>sin&theta;<sub>k</sub> = v<sub>y</sub>(k), where v<sub>x</sub> and v<sub>y</sub> are the velocities relative to the `odom` reference frame. We could then generalize the Euler integration method in order to use it for the omnidirectional robot. The generalized equations can be recapped in:
 - x<sub>k+1</sub> = x<sub>k</sub> + v<sub>x<sub>k</sub></sub>&#8729;&Delta;T
 - y<sub>k+1</sub> = y<sub>k</sub> + v<sub>y<sub>k</sub></sub>&#8729;&Delta;T
 - &theta;<sub>k+1</sub> = &theta;<sub>k</sub> + &omega;<sub>k</sub>&#8729;&Delta;T
 
-In case of a *mecanum wheeled robot*, v<sub>x</sub> and v<sub>y</sub> have the perpendicular components too. In the image below you can see the `base_link` as the system reference &eta; / &tau; and the `odom` frame as the system reference x / y , as in the slides.
+In case of a *mecanum wheeled robot*, v<sub>x</sub> and v<sub>y</sub> have the perpendicular components too. In the image below you can see the `base_link` as the reference system &tau; / &eta; and the `odom` frame as the reference system x / y , as in the slides.
 
 <p align="left">
     <img src="assets/images/euler-drawing.jpg" style="height:250px;"/>
@@ -198,13 +200,13 @@ We were required to add ROS parameters for defining the initial pose of the robo
 <param name="init_pose_th" value="0"/>
 ```
 
-Those values are then used for initializing the initial pose in the [compute_odometry](src/omnidirectional_robot_odometry/src/compute_odometry.cpp) node.
+Those values are then used for initializing pose in the [compute_odometry](src/omnidirectional_robot_odometry/src/compute_odometry.cpp) node.
 
-Notice that the initial pose values are referred to the `odom` frame. Considered that at the beginning of the odometry, `base_link` overlaps `odom`, those values are put to zero.
+Notice that the initial pose values are referred to the `odom` frame. Considered that, at the beginning of the odometry, `base_link` overlaps `odom`, those values are put to zero.
 
 ## TF tree
 
-In the [launch file](src/omnidirectional_robot_odometry/launch/odom.launch) you can also find three different TF static transforms `world` &#10132; `odom`. This is because the topic `robot/pose` of the bags refers to the frame `world`, hence we implemented a static translation taking into account the first values of the ground truth. In this way, our odometry better overlaps the GT odometry when visualized on `rviz`. There are three different transforms because each bag starts from a different position `world`.
+In the [launch file](src/omnidirectional_robot_odometry/launch/odom.launch) you can also find three different TF static transforms `world` &#10132; `odom`. This is because the topic `robot/pose` of the bags refers to the frame `world`, hence we implemented a static translation taking into account the first values of the ground truth. In this way, our odometry better overlaps the GT odometry when visualized on `rviz`. There are three different transforms because each bag starts from a different position in `world`.
 
 Below we show the structure of the final TF tree:
 
@@ -216,11 +218,11 @@ Below we show the structure of the final TF tree:
 
 We were required to compute wheel speeds in RPM starting from the velocities calculated in [compute_velocities](src/omnidirectional_robot_odometry/src/compute_velocities.cpp).
 
-The node [compute_wheel_speed](src/omnidirectional_robot_odometry/src/compute_wheel_speed.cpp) takes the velocities from the topic `cmd_vel` and then computes each wheel angular velocity using the system of equations number 20 of [Taheri et al.](#1). We report below the equations:
-- &omega;<sub>fl</sub> = ( v<sub>x</sub> - v<sub>y</sub> - (l<sub>x</sub> + l<sub>y</sub>)&#8729;&omega;<sub>z</sub> ) &#8729; <sup>1</sup> &#8725; <sub>r</sub>
-- &omega;<sub>fr</sub> = ( v<sub>x</sub> + v<sub>y</sub> + (l<sub>x</sub> + l<sub>y</sub>)&#8729;&omega;<sub>z</sub> ) &#8729; <sup>1</sup> &#8725; <sub>r</sub>
-- &omega;<sub>rl</sub> = ( v<sub>x</sub> + v<sub>y</sub> - (l<sub>x</sub> + l<sub>y</sub>)&#8729;&omega;<sub>z</sub> ) &#8729; <sup>1</sup> &#8725; <sub>r</sub>
-- &omega;<sub>rr</sub> = ( v<sub>x</sub> - v<sub>y</sub> + (l<sub>x</sub> + l<sub>y</sub>)&#8729;&omega;<sub>z</sub> ) &#8729; <sup>1</sup> &#8725; <sub>r</sub>
+The node [compute_wheel_speed](src/omnidirectional_robot_odometry/src/compute_wheel_speed.cpp) takes the velocities from the topic `cmd_vel` and then computes each wheel angular velocity using the system of equations number 20 of [Taheri et al.](#1). Those equations find the angular velocities in [rad/sec], and moreover they don't take into account the gear ratio between the motor and the wheel. Hence, we corrected them for our  situation multiplying by 60&#8729;T.  We report below the final equations:
+- &omega;<sub>fl</sub> = <sup>1</sup> &#8725; <sub>r</sub> &#8729; ( v<sub>x</sub> - v<sub>y</sub> - (l<sub>x</sub> + l<sub>y</sub>)&#8729;&omega;<sub>z</sub> ) &#8729; 60 &#8729; T
+- &omega;<sub>fr</sub> = <sup>1</sup> &#8725; <sub>r</sub> &#8729; ( v<sub>x</sub> + v<sub>y</sub> + (l<sub>x</sub> + l<sub>y</sub>)&#8729;&omega;<sub>z</sub> ) &#8729; 60 &#8729; T
+- &omega;<sub>rl</sub> = <sup>1</sup> &#8725; <sub>r</sub> &#8729; ( v<sub>x</sub> + v<sub>y</sub> - (l<sub>x</sub> + l<sub>y</sub>)&#8729;&omega;<sub>z</sub> ) &#8729; 60 &#8729; T
+- &omega;<sub>rr</sub> = <sup>1</sup> &#8725; <sub>r</sub> &#8729; ( v<sub>x</sub> - v<sub>y</sub> + (l<sub>x</sub> + l<sub>y</sub>)&#8729;&omega;<sub>z</sub> ) &#8729; 60 &#8729; T
 
 Subsequently, the node publishes the angular velocities as topic `wheels_rpm` using a **custom** message, called `CustomRpm`.
 
@@ -238,8 +240,8 @@ We were finally required to use dynamic reconfigure to select the odometry integ
 
 ## Authors
 
-- Davide Giacomini ([GitHub](https://github.com/davide-giacomini), [Linkedin](https://www.linkedin.com/in/davide-giacomini/), [email](mailto://giacomini.davide@outlook.com)) --- Codice Persona: 10567357
-- Giuseppe Cerruto ([GitHub](https://github.com/GiuseppeCerruto)) --- Codice Persona: 10749409
+- Davide Giacomini ([GitHub](https://github.com/davide-giacomini), [Linkedin](https://www.linkedin.com/in/davide-giacomini/), [email](mailto://giacomini.davide@outlook.com)) --- Person Code: 10567357
+- Giuseppe Cerruto ([GitHub](https://github.com/GiuseppeCerruto)) --- Person Code: 10749409
 
 ## References
 
