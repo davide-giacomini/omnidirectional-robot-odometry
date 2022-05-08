@@ -12,7 +12,7 @@ void ComputeVelocities::compute_velocities(const sensor_msgs::JointState::ConstP
   this->stamp_ns[1] = msg->header.stamp.nsec;
 
   if (this->stamp_ns[0] == -1) {
-    return;
+    return; // At least two values are needed to compute a velocity
   }
 
   for (int wheel = 0; wheel < 4; wheel++) {
@@ -20,14 +20,15 @@ void ComputeVelocities::compute_velocities(const sensor_msgs::JointState::ConstP
     this->ticks_wheels[wheel][1] = msg->position[wheel];
   }
 
-
-  double omega_wheels[4];
   // It makes the code more readable
   int N = Util::N;
   int T = Util::T;
   double r = Util::r;
   double l = Util::l;
   double w = Util::w;
+
+  // Angular velocities for each speed
+  double omega_wheels[4];
 
   for (int wheel = 0; wheel < 4; wheel++) {
     double dtick = this->ticks_wheels[wheel][1]-this->ticks_wheels[wheel][0];
@@ -40,6 +41,7 @@ void ComputeVelocities::compute_velocities(const sensor_msgs::JointState::ConstP
   double vel_y =  ( - omega_wheels[Wheel::FL] + omega_wheels[Wheel::FR] + omega_wheels[Wheel::RL] - omega_wheels[Wheel::RR]) * (r/4.0);
   double vel_th = ( - omega_wheels[Wheel::FL] + omega_wheels[Wheel::FR] - omega_wheels[Wheel::RL] + omega_wheels[Wheel::RR]) * (r / (4.0*(l + w)) );
 
+  // Publish the message
   geometry_msgs::TwistStamped pub_msg;
 
   pub_msg.header.stamp = msg->header.stamp;
