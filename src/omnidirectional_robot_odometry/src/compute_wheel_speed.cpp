@@ -2,13 +2,13 @@
 #include <omnidirectional_robot_odometry/util.h>
 
 ComputeControl::ComputeControl() {
-    this->subscriber_cmd_vel = this->nh.subscribe("cmd_vel", 1000, &ComputeControl::sub_callback, this);
+    this->subscriber_cmd_vel = this->nh.subscribe("cmd_vel", 1000, &ComputeControl::compute_wheels_speed, this);
     this->publish_wheel_speed = this->nh.advertise<omnidirectional_robot_odometry::CustomRpm>("wheels_rpm", 1000);
 }
 
-void ComputeControl::sub_callback(const geometry_msgs::TwistStamped::ConstPtr& msg) {
+void ComputeControl::compute_wheels_speed(const geometry_msgs::TwistStamped::ConstPtr& msg) {
 
-    wheels_speed my_wheels_speed = compute_wheels_speed(msg->twist.linear.x, msg->twist.linear.y, msg->twist.angular.z);
+    wheels_speed my_wheels_speed = compute_speed(msg->twist.linear.x, msg->twist.linear.y, msg->twist.angular.z);
 
     omnidirectional_robot_odometry::CustomRpm cust_msg;
 
@@ -22,7 +22,7 @@ void ComputeControl::sub_callback(const geometry_msgs::TwistStamped::ConstPtr& m
     this->publish_wheel_speed.publish(cust_msg);
 }
 
-wheels_speed ComputeControl::compute_wheels_speed(double vel_x, double vel_y, double vel_th) {
+wheels_speed ComputeControl::compute_speed(double vel_x, double vel_y, double vel_th) {
     wheels_speed my_wheels_speed;
     // Useless, but code more readable
     double r = Util::r;
