@@ -27,6 +27,8 @@ Under [srv/](src/omnidirectional_robot_odometry/srv/), [msg/](src/omnidirectiona
 
 Finally are defined `CMakeLists.txt` and `package.xml` for compilation purposes.
 
+If you want to run the bags, you can find them under the [bags/](bags/) folder.
+
 ## Getting Started
 
 You can either clone the repository and change directory:
