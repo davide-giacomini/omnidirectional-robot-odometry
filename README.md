@@ -102,13 +102,13 @@ It will open a window where you can easily choose between Euler and Runge-Kutta 
 
 ## Project Description
 
-In this project we were required to read from a bag file some information and calculate the odometry and other parameters of an omnidirectional robot. A semple is illustrated below.
+In this project I was required to read from a bag file some information and calculate the odometry and other parameters of an omnidirectional robot. A semple is illustrated below.
 
 <p align="left">
     <img src="assets/images/robot-model.png" style="height:200px;"/>
 </p>
 
-We were given:
+I was given:
 - Wheels encoder state:
     - RPM (noisy)
     - Ticks (more accurate)
@@ -120,7 +120,7 @@ We were given:
     - Encoder resolution(*N*): 42 CPR (Counts Per Rev.) (could be a bit off)
 - Ground truth (GT) pose of the robot (acquired with OptiTrack)
 
-And we were required to:
+And I was required to:
 - Compute odometry using appropriate kinematics
     - Compute robot linear and angular velocities `v`, `⍵` from wheel encoders
     - Compute odometry using both Euler and Runge-Kutta integration methods
@@ -130,14 +130,14 @@ And we were required to:
 - Add a service to reset the odometry to a specified pose **(x,y,θ)**
 - Use dynamic reconfigure to select between the desired integration method
 
-We created a package which contains three different nodes. Each node corresponds to a source code file and it is in charge of a different task, which is explained more in detail in the next sections.
+I created a package which contains three different nodes. Each node corresponds to a source code file and it is in charge of a different task, which is explained more in detail in the next sections.
 
 ## Compute robot velocities
 
-Given the wheel speeds of the robot from the bags, we were required to compute the robot linear and angular velocities. As a reference, we considered the formulas developed by [Taheri et al.](#1) for a mecanum wheeled mobile robot.
+Given the wheel speeds of the robot from the bags, I were required to compute the robot linear and angular velocities. As a reference, I considered the formulas developed by [Taheri et al.](#1) for a mecanum wheeled mobile robot.
 
 [comment]: < special entity html codes: https://www.science.co.il/internet/html/Greek-characters.php, https://www.toptal.com/designers/htmlarrows/math/, and others sites like >
-In particular, we are interested in the equations 22, 23 and 24 of the paper, which we report below:
+In particular, we are interested in the equations 22, 23 and 24 of the paper, which I report below:
 - v<sub>x</sub>(t) = ( &omega;<sub>fl</sub> + &omega;<sub>fr</sub> + &omega;<sub>rl</sub> + &omega;<sub>rr</sub> ) &#8729; <sup>r</sup> &#8725; <sub>4</sub>
 - v<sub>y</sub>(t) = ( - &omega;<sub>fl</sub> + &omega;<sub>fr</sub> + &omega;<sub>rl</sub> - &omega;<sub>rr</sub> ) &#8729; <sup>r</sup> &#8725; <sub>4</sub>
 - &omega;<sub>z</sub>(t) = ( - &omega;<sub>fl</sub> + &omega;<sub>fr</sub> - &omega;<sub>rl</sub> + &omega;<sub>rr</sub> ) &#8729; <sup>r</sup> &#8725; <sub>4(l<sub>x</sub> + l<sub>y</sub>)</sub>
@@ -148,19 +148,19 @@ The node "[compute_velocities](src/omnidirectional_robot_odometry/src/compute_ve
 
 &omega; = ( <sup>&Delta;<sub>ticks</sub></sup> &#8725; <sub>&Delta;<sub>time</sub></sub> ) &#8729; ( <sup>1</sup> &#8725; <sub>N</sub> ) &#8729; ( <sup>1</sup> &#8725; <sub>T</sub> ) &#8729; 2&pi;
 
-Where <sup>&Delta;<sub>ticks</sub></sup> &#8725; <sub>&Delta;<sub>time</sub></sub> refers to the difference between the number of ticks divided by the period of time that has been measured. Please notice that we divided by the gear ratio because the encoders are located in the motors of the wheels. Once computing each angular velocity, the robot velocities can be computed using the aformentioned three equations, and they are eventually published as topic `cmd_vel`.
+Where <sup>&Delta;<sub>ticks</sub></sup> &#8725; <sub>&Delta;<sub>time</sub></sub> refers to the difference between the number of ticks divided by the period of time that has been measured. Please notice that I divided by the gear ratio because the encoders are located in the motors of the wheels. Once computing each angular velocity, the robot velocities can be computed using the aformentioned three equations, and they are eventually published as topic `cmd_vel`.
 
 ## Compute odometry
 
-For this task, we were required to compute the robot odometry starting from the velocities we just calculated in the previous task. Furthermore, we were required to use both Euler and Runge-Kutta integration methods.
+For this task, I was required to compute the robot odometry starting from the velocities I just calculated in the previous task. Furthermore, I was required to use both Euler and Runge-Kutta integration methods.
 
-After computing the odometry, we published it as topic `odom` and wrote a TF broadcaster having as father the frame `odom` and as children the frame `base_link` (`odom` &#10132; `base_link`), which is basically the Reference System of the center of gravity of the robot. 
+After computing the odometry, I published it as topic `odom` and wrote a TF broadcaster having as father the frame `odom` and as children the frame `base_link` (`odom` &#10132; `base_link`), which is basically the Reference System of the center of gravity of the robot. 
 
 All of this can be found in the node "[compute_odometry](src/omnidirectional_robot_odometry/src/compute_odometry.cpp)", which reads from the topic `cmd_vel` the velocities.
 
 ### Euler integration method
 
-We used as a reference the set of slides of Professor Matteucci [[2]](#2). From now on we will consider our `odom` frame as the fixed frame of the slides, and our `base_link` frame as the mobile frame of the robot. In case of a *differential drive* (slide 22), it can be seen that we have the x axis of the `base_link` frame always parallel to the direction of the velocity of the robot. This is not true for a *mecanum wheeled robot*, where we have to take into account both the parallel and perpendicular component of the velocity.
+I used as a reference the set of slides of Professor Matteucci [[2]](#2). From now on I will consider our `odom` frame as the fixed frame of the slides, and our `base_link` frame as the mobile frame of the robot. In case of a *differential drive* (slide 22), it can be seen that I have the x axis of the `base_link` frame always parallel to the direction of the velocity of the robot. This is not true for a *mecanum wheeled robot*, where I have to take into account both the parallel and perpendicular component of the velocity.
 
 At slide number 27, the Euler integration method for *differential drive* is illustrated. We can see that v<sub>k</sub>cos&theta;<sub>k</sub> = v<sub>x</sub>(k) and v<sub>k</sub>sin&theta;<sub>k</sub> = v<sub>y</sub>(k), where v<sub>x</sub> and v<sub>y</sub> are the velocities relative to the `odom` reference frame. We could then generalize the Euler integration method in order to use it for the omnidirectional robot. The generalized equations can be recapped in:
 - x<sub>k+1</sub> = x<sub>k</sub> + v<sub>x<sub>k</sub></sub>&#8729;&Delta;T
@@ -181,7 +181,7 @@ Applying these equations to the above ones, we can obtain the odometry starting 
 
 ### Runge-Kutta integration method
 
-Starting from the assumptions made in the section before, we took as a reference the equations for *differential drive* listed at slide 28 ([[2]](#2)). In case of a *mecanum wheeled robot*, we split again the two components. It is illustrated in the image below.
+Starting from the assumptions made in the section before, I took as a reference the equations for *differential drive* listed at slide 28 ([[2]](#2)). In case of a *mecanum wheeled robot*, I split again the two components. It is illustrated in the image below.
 
 <p align="left">
     <img src="assets/images/runge-kutta-drawing.jpg" style="height:250px;"/>
@@ -194,7 +194,7 @@ Putting all together, the three equations for Runge-Kutta are:
 
 ## ROS parameters for initial pose
 
-We were required to add ROS parameters for defining the initial pose of the robot (x, y, &theta;). You can find them in the [launch file](src/omnidirectional_robot_odometry/launch/odom.launch), at line 3-4-5:
+I was required to add ROS parameters for defining the initial pose of the robot (x, y, &theta;). You can find them in the [launch file](src/omnidirectional_robot_odometry/launch/odom.launch), at line 3-4-5:
 
 ```
 <param name="init_pose_x" value="0"/>
@@ -210,7 +210,7 @@ Notice that the initial pose values are referred to the `odom` frame. Considered
 
 In the [launch file](src/omnidirectional_robot_odometry/launch/odom.launch) you can also find three different TF static transforms `world` &#10132; `odom`. This is because the topic `robot/pose` of the bags refers to the frame `world`, hence we implemented a static translation taking into account the first values of the ground truth. In this way, our odometry better overlaps the GT odometry when visualized on `rviz`. There are three different transforms because each bag starts from a different position in `world`.
 
-Below we show the structure of the final TF tree:
+Below I show the structure of the final TF tree:
 
 <p align="left">
     <img src="assets/images/TF-tree.png" style="height:250px;"/>
@@ -218,9 +218,9 @@ Below we show the structure of the final TF tree:
 
 ## Compute Control
 
-We were required to compute wheel speeds in RPM starting from the velocities calculated in [compute_velocities](src/omnidirectional_robot_odometry/src/compute_velocities.cpp).
+I was required to compute wheel speeds in RPM starting from the velocities calculated in [compute_velocities](src/omnidirectional_robot_odometry/src/compute_velocities.cpp).
 
-The node [compute_wheel_speed](src/omnidirectional_robot_odometry/src/compute_wheel_speed.cpp) takes the velocities from the topic `cmd_vel` and then computes each wheel angular velocity using the system of equations number 20 of [Taheri et al.](#1). Those equations find the angular velocities in [rad/sec], and moreover they don't take into account the gear ratio between the motor and the wheel. Hence, we corrected them for our  situation multiplying by 60&#8729;T.  We report below the final equations:
+The node [compute_wheel_speed](src/omnidirectional_robot_odometry/src/compute_wheel_speed.cpp) takes the velocities from the topic `cmd_vel` and then computes each wheel angular velocity using the system of equations number 20 of [Taheri et al.](#1). Those equations find the angular velocities in [rad/sec], and moreover they don't take into account the gear ratio between the motor and the wheel. Hence, I corrected them for our  situation multiplying by 60&#8729;T.  The final equationsare reported below:
 - &omega;<sub>fl</sub> = <sup>1</sup> &#8725; <sub>r</sub> &#8729; ( v<sub>x</sub> - v<sub>y</sub> - (l<sub>x</sub> + l<sub>y</sub>)&#8729;&omega;<sub>z</sub> ) &#8729; 60 &#8729; T
 - &omega;<sub>fr</sub> = <sup>1</sup> &#8725; <sub>r</sub> &#8729; ( v<sub>x</sub> + v<sub>y</sub> + (l<sub>x</sub> + l<sub>y</sub>)&#8729;&omega;<sub>z</sub> ) &#8729; 60 &#8729; T
 - &omega;<sub>rl</sub> = <sup>1</sup> &#8725; <sub>r</sub> &#8729; ( v<sub>x</sub> + v<sub>y</sub> - (l<sub>x</sub> + l<sub>y</sub>)&#8729;&omega;<sub>z</sub> ) &#8729; 60 &#8729; T
@@ -234,13 +234,13 @@ The structure of the custom message can be found in the file `CustomRpm.msg` und
 
 ## Reset Service
 
-We were asked to define a service for resetting the odometry to any given pose (x,y,&theta;). The file `ResetOdometry.srv` under the [srv/](src/omnidirectional_robot_odometry/srv/) folder defines a service called `/reset_odometry` that takes as input the x, y and &theta;. The function `ComputeOdometry::reset_odometry` in [compute_odometry.cpp](src/omnidirectional_robot_odometry/src/compute_odometry.cpp.cpp) takes as input the pose given and resets even at runtime the odometry.
+I was asked to define a service for resetting the odometry to any given pose (x,y,&theta;). The file `ResetOdometry.srv` under the [srv/](src/omnidirectional_robot_odometry/srv/) folder defines a service called `/reset_odometry` that takes as input the x, y and &theta;. The function `ComputeOdometry::reset_odometry` in [compute_odometry.cpp](src/omnidirectional_robot_odometry/src/compute_odometry.cpp.cpp) takes as input the pose given and resets even at runtime the odometry.
 
 ## Integration Method Selector
 
-We were finally required to use dynamic reconfigure to select the odometry integration method (either Euler or Runge-Kutta). The reconfiguration is defined in `parameters.cfg`, under the folder [cfg/](src/omnidirectional_robot_odometry/cfg/). The constants "Euler" and "RK" are then used in [compute_odometry.cpp](src/omnidirectional_robot_odometry/src/compute_odometry.cpp) for deciding the integration method at runtime.
+I was finally required to use dynamic reconfigure to select the odometry integration method (either Euler or Runge-Kutta). The reconfiguration is defined in `parameters.cfg`, under the folder [cfg/](src/omnidirectional_robot_odometry/cfg/). The constants "Euler" and "RK" are then used in [compute_odometry.cpp](src/omnidirectional_robot_odometry/src/compute_odometry.cpp) for deciding the integration method at runtime.
 
-## Authors
+## Author
 
 - Davide Giacomini ([GitHub](https://github.com/davide-giacomini), [Linkedin](https://www.linkedin.com/in/davide-giacomini/), [email](mailto://giacomini.davide@outlook.com))
 
